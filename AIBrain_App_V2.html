@@ -1,0 +1,1484 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>AIBrain Home · App</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --ink:#05111e;--ink1:#091928;--ink2:#0d2035;--ink3:#122840;--ink4:#1a3352;
+  --wire:#1e3a56;--wire2:#284d70;--wire3:#33608a;
+  --sky:#d8eeff;--sky2:#a0c8f0;--sky3:#5a9fd4;
+  --pulse:#00e5c8;--pulse2:#00b89e;--pulse3:#003d35;
+  --sun:#ffc040;--sun2:#e08000;--sun3:#3d2800;
+  --fire:#ff4560;--fire2:#cc1030;--fire3:#3d000c;
+  --violet:#b060ff;--violet2:#7030c8;--violet3:#250848;
+  --r8:8px;--r12:12px;--r16:16px;--r22:22px;--r32:32px;
+  --f-ui:'Syne','Noto Sans SC',sans-serif;
+  --f-data:'JetBrains Mono',monospace;
+  --f-body:'Noto Sans SC',sans-serif;
+}
+html,body{height:100%;background:#03080f;display:flex;align-items:center;justify-content:center;overflow:hidden}
+
+/* ── DEVICE FRAME ── */
+.device{
+  width:393px;height:852px;
+  background:var(--ink);
+  border-radius:48px;
+  border:2px solid var(--wire2);
+  overflow:hidden;
+  display:flex;flex-direction:column;
+  position:relative;
+  box-shadow:0 0 120px rgba(0,229,200,.04),0 40px 80px rgba(0,0,0,.8);
+}
+
+/* ── DYNAMIC ISLAND ── */
+.island{
+  position:absolute;top:10px;left:50%;transform:translateX(-50%);
+  width:120px;height:34px;background:#000;border-radius:17px;
+  z-index:100;display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.island-cam{width:10px;height:10px;border-radius:50%;background:#1a1a1a;border:1.5px solid #333}
+.island-dot{width:6px;height:6px;border-radius:50%;background:var(--pulse);animation:breathe 2s ease-in-out infinite}
+@keyframes breathe{0%,100%{opacity:.5;transform:scale(.85)}50%{opacity:1;transform:scale(1)}}
+
+/* ── STATUS BAR ── */
+.sbar{
+  height:52px;padding:14px 22px 0;
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--ink1);flex-shrink:0;z-index:50;
+}
+.sbar-time{font-family:var(--f-ui);font-size:15px;font-weight:600;color:var(--sky)}
+.sbar-icons{display:flex;align-items:center;gap:5px}
+.sbar-icons svg{width:14px;height:14px;stroke:var(--sky2);fill:none;stroke-width:1.5}
+
+/* ── SCREEN SYSTEM ── */
+.screen-wrap{flex:1;position:relative;overflow:hidden}
+.screen{
+  position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;
+  background:var(--ink);scrollbar-width:none;
+  transform:translateX(100%);
+  transition:transform .32s cubic-bezier(.25,.46,.45,.94);
+}
+.screen::-webkit-scrollbar{display:none}
+.screen.active{transform:translateX(0)}
+.screen.behind{transform:translateX(-28%)}
+
+/* ── BOTTOM NAV ── */
+.bnav{
+  height:78px;background:var(--ink1);
+  border-top:1px solid var(--wire);
+  display:flex;align-items:flex-start;justify-content:space-around;
+  padding-top:10px;flex-shrink:0;
+}
+.bnav-item{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  cursor:pointer;padding:0 14px;position:relative;
+}
+.bnav-item svg{width:22px;height:22px;stroke:var(--wire3);fill:none;stroke-width:1.5;transition:stroke .2s}
+.bnav-item span{font-family:var(--f-data);font-size:10px;color:var(--wire3);transition:color .2s}
+.bnav-item.on svg{stroke:var(--pulse)}
+.bnav-item.on span{color:var(--pulse)}
+.bnav-badge{position:absolute;top:-2px;right:8px;width:8px;height:8px;border-radius:50%;background:var(--fire);border:1.5px solid var(--ink1)}
+
+/* ── HOME BAR ── */
+.hbar{height:8px;display:flex;align-items:center;justify-content:center;background:var(--ink1)}
+.hbar-pill{width:108px;height:4px;background:var(--wire2);border-radius:2px}
+
+/* ══════════════════════════════════════
+   COMMON ATOMS
+══════════════════════════════════════ */
+.page-hd{
+  display:flex;align-items:center;gap:10px;
+  padding:14px 18px;background:var(--ink1);
+  border-bottom:1px solid var(--wire);
+  position:sticky;top:0;z-index:20;
+}
+.back-btn{
+  width:34px;height:34px;border-radius:10px;
+  background:var(--ink2);border:1px solid var(--wire);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;
+}
+.back-btn svg{width:16px;height:16px;stroke:var(--sky2);fill:none;stroke-width:2}
+.page-hd-info{flex:1;text-align:center}
+.page-hd-title{font-family:var(--f-ui);font-size:14px;font-weight:600;color:var(--sky);letter-spacing:.3px}
+.page-hd-sub{font-family:var(--f-data);font-size:10px;color:var(--wire3);margin-top:1px}
+
+/* pills / chips */
+.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-family:var(--f-data);font-size:10px}
+.chip-pulse{background:rgba(0,229,200,.1);color:var(--pulse);border:1px solid rgba(0,229,200,.22)}
+.chip-sun{background:rgba(255,192,64,.1);color:var(--sun);border:1px solid rgba(255,192,64,.2)}
+.chip-fire{background:rgba(255,69,96,.1);color:var(--fire);border:1px solid rgba(255,69,96,.2)}
+.chip-violet{background:rgba(176,96,255,.1);color:var(--violet);border:1px solid rgba(176,96,255,.2)}
+.chip-sky{background:rgba(160,200,240,.1);color:var(--sky2);border:1px solid rgba(160,200,240,.18)}
+
+/* cards */
+.card{background:var(--ink2);border:1px solid var(--wire);border-radius:var(--r16);overflow:hidden}
+.card-hd{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--wire);background:var(--ink3)}
+.card-hd-label{font-family:var(--f-ui);font-size:12px;font-weight:600;color:var(--sky);display:flex;align-items:center;gap:6px}
+.card-hd-label svg{width:13px;height:13px;stroke:var(--pulse);fill:none;stroke-width:1.5}
+
+/* section title */
+.sec-row{display:flex;align-items:center;justify-content:space-between;padding:12px 18px 6px}
+.sec-title{font-family:var(--f-data);font-size:10px;color:var(--wire3);letter-spacing:1.5px;text-transform:uppercase}
+.sec-link{font-family:var(--f-ui);font-size:12px;color:var(--pulse);cursor:pointer}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border-radius:var(--r12);font-family:var(--f-ui);font-size:12px;cursor:pointer;border:1px solid;transition:all .18s;font-weight:500}
+.btn-ghost{background:transparent;border-color:var(--wire2);color:var(--sky2)}
+.btn-ghost:hover{border-color:var(--wire3)}
+.btn-pulse{background:rgba(0,229,200,.1);border-color:rgba(0,229,200,.3);color:var(--pulse)}
+.btn-sun{background:rgba(255,192,64,.1);border-color:rgba(255,192,64,.3);color:var(--sun)}
+.btn-fire{background:rgba(255,69,96,.1);border-color:rgba(255,69,96,.3);color:var(--fire)}
+.btn-violet{background:rgba(176,96,255,.1);border-color:rgba(176,96,255,.3);color:var(--violet)}
+
+/* metric boxes */
+.metrics-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px}
+.metric{background:var(--ink3);border:1px solid var(--wire);border-radius:var(--r12);padding:10px 9px;text-align:center}
+.metric-val{font-family:var(--f-data);font-size:19px;font-weight:500;color:var(--pulse);line-height:1}
+.metric-val.sun{color:var(--sun)}.metric-val.fire{color:var(--fire)}.metric-val.violet{color:var(--violet)}
+.metric-key{font-family:var(--f-data);font-size:9px;color:var(--wire3);margin-top:5px}
+
+/* stat mini */
+.mini-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:12px}
+.mini-stat{background:var(--ink3);border:1px solid var(--wire);border-radius:var(--r12);padding:11px 12px}
+.mini-val{font-family:var(--f-data);font-size:20px;font-weight:500}
+.mini-lbl{font-family:var(--f-data);font-size:9px;color:var(--wire3);margin-top:4px}
+
+/* horizontal scroll */
+.hscroll{display:flex;gap:8px;padding:0 16px 12px;overflow-x:auto;scrollbar-width:none}
+.hscroll::-webkit-scrollbar{display:none}
+
+/* divider */
+.div{height:1px;background:var(--wire);margin:0}
+
+/* toggle */
+.tog{width:38px;height:22px;border-radius:11px;border:none;cursor:pointer;position:relative;flex-shrink:0;transition:background .3s}
+.tog.on{background:var(--pulse2)}
+.tog.off{background:var(--wire2)}
+.tog::after{content:'';position:absolute;top:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .3s}
+.tog.on::after{left:19px}
+.tog.off::after{left:3px}
+
+/* timeline */
+.tl{padding:12px 16px;display:flex;flex-direction:column;gap:0}
+.tl-item{display:flex;gap:10px;padding-bottom:16px;position:relative}
+.tl-item:not(:last-child)::before{content:'';position:absolute;left:13px;top:27px;bottom:0;width:1px;background:var(--wire)}
+.tl-dot{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;z-index:1;border:1px solid var(--wire);background:var(--ink2)}
+.tl-dot.p{background:rgba(0,229,200,.1);border-color:rgba(0,229,200,.35)}
+.tl-dot.s{background:rgba(255,192,64,.1);border-color:rgba(255,192,64,.35)}
+.tl-dot.d{background:rgba(255,69,96,.1);border-color:rgba(255,69,96,.35)}
+.tl-body{flex:1;padding-top:2px}
+.tl-title{font-family:var(--f-ui);font-size:12px;font-weight:600;color:var(--sky);margin-bottom:3px}
+.tl-desc{font-family:var(--f-body);font-size:11px;color:var(--sky2);line-height:1.55}
+.tl-ai{margin-top:6px;font-family:var(--f-data);font-size:10px;color:var(--pulse);background:rgba(0,229,200,.07);border:1px solid rgba(0,229,200,.18);border-radius:6px;padding:5px 8px}
+.tl-time{font-family:var(--f-data);font-size:9px;color:var(--wire3);margin-left:auto;flex-shrink:0;padding-top:3px}
+
+/* bar chart mini */
+.bar-chart{display:flex;align-items:flex-end;gap:4px;height:50px;padding:0 12px}
+.bar-col{flex:1;border-radius:4px 4px 0 0;min-height:4px;transition:height .5s}
+
+/* notification toast */
+.toast{
+  position:absolute;top:62px;left:12px;right:12px;z-index:200;
+  background:var(--ink2);border:1px solid var(--wire2);border-radius:var(--r16);
+  padding:11px 14px;display:flex;align-items:center;gap:10px;
+  transform:translateY(-120%);transition:transform .36s cubic-bezier(.34,1.56,.64,1);
+}
+.toast.show{transform:translateY(0)}
+.toast-icon{font-size:16px;flex-shrink:0}
+.toast-body{flex:1;font-family:var(--f-body);font-size:12px;color:var(--sky2);line-height:1.4}
+.toast-close{font-size:14px;color:var(--wire3);cursor:pointer;flex-shrink:0;padding:2px 4px}
+
+/* bar graph progress */
+.prog-bar{height:5px;background:var(--wire);border-radius:3px;overflow:hidden;flex:1}
+.prog-fill{height:100%;border-radius:3px}
+
+/* AI insight block */
+.ai-block{
+  margin:10px 16px;padding:11px 13px;
+  background:rgba(176,96,255,.06);border:1px solid rgba(176,96,255,.2);border-radius:var(--r12);
+  border-left:2.5px solid var(--violet);
+}
+.ai-block-label{font-family:var(--f-data);font-size:9px;color:var(--violet);margin-bottom:4px;letter-spacing:.5px}
+.ai-block-text{font-family:var(--f-body);font-size:11px;color:var(--sky2);line-height:1.6}
+
+/* camera feed mock */
+.cam-mock{position:relative;background:var(--ink3);border-radius:var(--r12);overflow:hidden;border:1px solid var(--wire)}
+.cam-content{width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px}
+.cam-emoji{font-size:32px}
+.cam-room{font-family:var(--f-data);font-size:9px;color:var(--wire3)}
+.cam-overlay{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;padding:8px}
+.cam-rec{display:flex;align-items:center;gap:4px;background:rgba(255,69,96,.2);color:var(--fire);font-family:var(--f-data);font-size:9px;padding:2px 7px;border-radius:4px;width:fit-content}
+.rec-blink{width:5px;height:5px;border-radius:50%;background:var(--fire);animation:breathe 1s infinite}
+.cam-ai-tag{font-family:var(--f-data);font-size:9px;padding:2px 7px;border-radius:4px;width:fit-content;border:1px solid}
+.cat-warn{background:rgba(255,192,64,.15);color:var(--sun);border-color:rgba(255,192,64,.3)}
+.cat-ok{background:rgba(0,229,200,.1);color:var(--pulse);border-color:rgba(0,229,200,.25)}
+.cat-vi{background:rgba(176,96,255,.1);color:var(--violet);border-color:rgba(176,96,255,.25)}
+.cam-dark-label{background:rgba(5,17,30,.75);color:var(--sky2);font-family:var(--f-data);font-size:9px;padding:2px 7px;border-radius:4px;width:fit-content}
+
+/* care item */
+.care-item{
+  display:flex;align-items:flex-start;gap:11px;
+  padding:12px 16px;border-bottom:1px solid var(--wire);cursor:pointer;transition:background .15s;
+}
+.care-item:last-child{border-bottom:none}
+.care-item:hover{background:var(--ink3)}
+.care-item.urgent{background:rgba(255,69,96,.04)}
+.care-item.warn{background:rgba(255,192,64,.03)}
+.ci-icon{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.ci-icon.d{background:var(--fire3)}.ci-icon.s{background:var(--sun3)}.ci-icon.p{background:var(--pulse3)}.ci-icon.v{background:var(--violet3)}
+.ci-body{flex:1;min-width:0}
+.ci-title{font-family:var(--f-ui);font-size:12px;font-weight:600;color:var(--sky);margin-bottom:3px}
+.ci-desc{font-family:var(--f-body);font-size:11px;color:var(--sky2);line-height:1.45}
+.ci-foot{display:flex;align-items:center;gap:5px;margin-top:6px;flex-wrap:wrap}
+.ci-time{font-family:var(--f-data);font-size:9px;color:var(--wire3)}
+.ci-arr{width:14px;height:14px;stroke:var(--wire3);fill:none;stroke-width:2;flex-shrink:0;margin-top:2px}
+
+/* rule card */
+.rule-card{
+  margin:8px 16px;padding:13px;
+  background:var(--ink2);border:1px solid var(--wire);border-radius:var(--r16);cursor:pointer;
+  transition:border-color .2s;
+}
+.rule-card.violet{border-left:2.5px solid var(--violet)}
+.rule-card.pulse{border-left:2.5px solid var(--pulse)}
+.rule-card:hover{border-color:var(--wire2)}
+.rule-hd{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.rule-icon{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ri-v{background:var(--violet3)}.ri-v svg{stroke:var(--violet)}
+.ri-p{background:var(--pulse3)}.ri-p svg{stroke:var(--pulse)}
+.rule-icon svg{width:12px;height:12px;fill:none;stroke-width:1.5}
+.rule-title{font-family:var(--f-ui);font-size:12px;font-weight:600;color:var(--sky);flex:1}
+.rule-body-text{font-family:var(--f-body);font-size:11px;color:var(--sky2);line-height:1.55;margin-bottom:9px}
+.rule-actions{display:flex;gap:6px;flex-wrap:wrap}
+
+/* member chip */
+.m-chip{
+  flex-shrink:0;background:var(--ink2);border:1px solid var(--wire);
+  border-radius:var(--r16);padding:11px 12px;min-width:88px;cursor:pointer;transition:border-color .2s;
+}
+.m-chip:hover{border-color:var(--wire2)}
+.m-chip.alert{border-color:rgba(255,192,64,.35)}
+.m-av{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--f-ui);font-size:14px;font-weight:600;margin-bottom:7px;position:relative}
+.m-online{position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;border:1.5px solid var(--ink2)}
+.m-name{font-family:var(--f-ui);font-size:11px;font-weight:600;color:var(--sky)}
+.m-badge{font-family:var(--f-data);font-size:9px;padding:2px 6px;border-radius:5px;margin-top:4px;display:inline-block}
+.mb-s{background:var(--sun3);color:var(--sun)}.mb-p{background:var(--pulse3);color:var(--pulse)}.mb-d{background:var(--fire3);color:var(--fire)}.mb-v{background:var(--violet3);color:var(--violet)}
+
+/* device chip */
+.dev-chip{
+  flex-shrink:0;background:var(--ink2);border:1px solid var(--wire);
+  border-radius:var(--r16);padding:10px;width:78px;text-align:center;cursor:pointer;transition:all .2s;
+}
+.dev-chip.on{border-color:rgba(0,229,200,.3);background:rgba(0,229,200,.05)}
+.dev-chip.alert{border-color:rgba(255,192,64,.3)}
+.dev-chip:hover{border-color:var(--wire2)}
+.dev-ico{font-size:20px;margin-bottom:5px}
+.dev-name{font-family:var(--f-ui);font-size:10px;font-weight:500;color:var(--sky2)}
+.dev-val{font-family:var(--f-data);font-size:9px;margin-top:2px}
+.dev-chip.on .dev-val{color:var(--pulse)}
+.dev-chip:not(.on) .dev-val{color:var(--wire3)}
+
+/* quick prompt chips */
+.qp-item{
+  display:flex;align-items:flex-start;gap:9px;padding:10px 12px;margin-bottom:7px;
+  background:var(--ink2);border:1px solid var(--wire);border-radius:var(--r12);cursor:pointer;transition:border-color .2s;
+}
+.qp-item:hover{border-color:var(--wire2)}
+.qp-emoji{font-size:14px;flex-shrink:0;padding-top:1px}
+.qp-text{font-family:var(--f-body);font-size:11px;color:var(--sky2);flex:1;line-height:1.45}
+.qp-type{font-family:var(--f-data);font-size:9px;padding:2px 6px;border-radius:4px;flex-shrink:0;margin-top:1px}
+.qt-rule{background:var(--violet3);color:var(--violet)}
+.qt-remind{background:var(--sun3);color:var(--sun)}
+.qt-query{background:var(--pulse3);color:var(--pulse)}
+.qt-scene{background:var(--ink4);color:var(--sky3)}
+
+/* chat */
+.chat-wrap{padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.msg-row{display:flex;flex-direction:column;gap:3px}
+.msg-row.ai{align-items:flex-start}.msg-row.me{align-items:flex-end}
+.msg-who{font-family:var(--f-data);font-size:9px;color:var(--wire3);padding:0 3px}
+.msg-who.vi{color:var(--violet)}
+.msg-bub{padding:9px 13px;border-radius:12px;font-family:var(--f-body);font-size:11px;line-height:1.6;max-width:86%}
+.msg-row.ai .msg-bub{background:var(--ink2);border:1px solid var(--wire);color:var(--sky2);border-radius:2px 12px 12px 12px}
+.msg-row.me .msg-bub{background:rgba(0,229,200,.1);border:1px solid rgba(0,229,200,.25);color:var(--pulse);border-radius:12px 2px 12px 12px}
+.msg-confirm{display:flex;gap:7px;padding-left:2px;padding-top:2px}
+
+/* ai input */
+.ai-compose{
+  display:flex;gap:8px;align-items:flex-end;
+  padding:10px 14px;background:var(--ink1);border-top:1px solid var(--wire);
+}
+.ai-textarea{
+  flex:1;background:var(--ink2);border:1px solid var(--wire2);border-radius:14px;
+  padding:9px 13px;font-family:var(--f-body);font-size:11px;color:var(--sky);
+  outline:none;resize:none;min-height:38px;line-height:1.5;transition:border-color .2s;
+}
+.ai-textarea:focus{border-color:rgba(0,229,200,.4)}
+.ai-textarea::placeholder{color:var(--wire3)}
+.ai-mic,.ai-send{
+  width:38px;height:38px;border-radius:50%;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;
+}
+.ai-mic{background:var(--ink2);border:1px solid var(--wire2)}
+.ai-mic svg{width:15px;height:15px;stroke:var(--sky2);fill:none;stroke-width:1.5}
+.ai-send{background:rgba(0,229,200,.15);border:1.5px solid rgba(0,229,200,.4)}
+.ai-send svg{width:14px;height:14px;stroke:var(--pulse);fill:none;stroke-width:2}
+.ai-send:hover{background:rgba(0,229,200,.25)}
+
+/* storage bar */
+.stor-bar{display:flex;height:7px;border-radius:4px;overflow:hidden;margin:10px 16px;background:var(--wire)}
+.stor-seg{height:100%}
+
+/* file row */
+.file-row{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--wire);cursor:pointer;transition:background .15s}
+.file-row:last-child{border-bottom:none}
+.file-row:hover{background:var(--ink3)}
+.file-ico{width:32px;height:32px;border-radius:9px;background:var(--ink3);border:1px solid var(--wire);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.file-name{font-family:var(--f-ui);font-size:12px;font-weight:500;color:var(--sky);flex:1}
+.file-meta{font-family:var(--f-data);font-size:9px;color:var(--wire3);margin-top:2px}
+.file-size{font-family:var(--f-data);font-size:10px;color:var(--wire3)}
+
+/* setting row */
+.set-row{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--wire);cursor:pointer;transition:background .15s}
+.set-row:last-child{border-bottom:none}
+.set-row:hover{background:var(--ink3)}
+.set-ico{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.set-body{flex:1}.set-label{font-family:var(--f-ui);font-size:12px;font-weight:500;color:var(--sky)}
+.set-sub{font-family:var(--f-data);font-size:9px;color:var(--wire3);margin-top:2px}
+.set-arr{width:14px;height:14px;stroke:var(--wire3);fill:none;stroke-width:2}
+
+/* vlog key moment */
+.vkm{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--ink2);border:1px solid var(--wire);border-radius:var(--r12);margin-bottom:7px;cursor:pointer;transition:border-color .2s}
+.vkm:hover{border-color:var(--wire2)}
+.vkm-ts{font-family:var(--f-data);font-size:10px;color:var(--wire3);width:34px}
+.vkm-title{font-family:var(--f-body);font-size:11px;color:var(--sky);flex:1}
+
+/* ══════════════════
+   SCREEN: HOME
+══════════════════ */
+#s-home{background:var(--ink)}
+
+.home-hero{
+  padding:16px 18px 12px;
+  background:var(--ink1);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.hero-left .date{font-family:var(--f-data);font-size:10px;color:var(--wire3);margin-bottom:4px}
+.hero-left .greet{font-family:var(--f-ui);font-size:18px;font-weight:700;color:var(--sky);line-height:1.2}
+.hero-left .sub{font-family:var(--f-body);font-size:12px;color:var(--sky2);margin-top:4px}
+.hero-left .sub .warn{color:var(--sun)}
+.hero-av{
+  width:42px;height:42px;border-radius:50%;
+  background:rgba(0,229,200,.12);border:1.5px solid rgba(0,229,200,.4);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--f-ui);font-size:15px;font-weight:700;color:var(--pulse);
+  cursor:pointer;flex-shrink:0;
+}
+
+/* VLOG CARD */
+.vlog-wrap{margin:12px 16px;border-radius:var(--r22);overflow:hidden;border:1px solid var(--wire);cursor:pointer;background:var(--ink2)}
+.vlog-thumb{position:relative;height:158px;background:var(--ink3)}
+.vlog-scenes{display:grid;grid-template-columns:repeat(3,1fr);height:100%;gap:1px}
+.vs{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;background:var(--ink3);position:relative;overflow:hidden}
+.vs:nth-child(1){background:rgba(255,192,64,.04)}
+.vs-emoji{font-size:28px}
+.vs-room{font-family:var(--f-data);font-size:9px;color:var(--wire3)}
+.vs-ai-tag{position:absolute;bottom:6px;left:0;right:0;padding:0 6px}
+.vs-ai-inner{font-family:var(--f-data);font-size:8px;padding:2px 6px;border-radius:4px;width:fit-content}
+.vlog-overlay-top{position:absolute;top:0;left:0;right:0;padding:9px 12px;display:flex;align-items:center;justify-content:space-between;z-index:2}
+.vlog-play{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2;
+  width:46px;height:46px;border-radius:50%;
+  background:rgba(0,229,200,.18);border:1.5px solid rgba(0,229,200,.5);
+  display:flex;align-items:center;justify-content:center;
+}
+.vlog-play svg{width:20px;height:20px;fill:var(--pulse);margin-left:2px}
+.vlog-info{padding:11px 14px}
+.vlog-title{font-family:var(--f-ui);font-size:13px;font-weight:700;color:var(--sky);margin-bottom:4px}
+.vlog-desc{font-family:var(--f-body);font-size:11px;color:var(--sky2);line-height:1.6}
+.vlog-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+
+/* ALERT STRIP */
+.alert-wrap{margin:0 16px 10px;border-radius:var(--r16);overflow:hidden;border:1px solid var(--wire);background:var(--ink2)}
+.alert-row{
+  display:flex;align-items:flex-start;gap:10px;padding:11px 13px;
+  border-bottom:1px solid var(--wire);cursor:pointer;transition:background .15s;
+}
+.alert-row:last-child{border-bottom:none}
+.alert-row:hover{background:var(--ink3)}
+.alert-row.u{border-left:2.5px solid var(--fire)}
+.alert-row.w{border-left:2.5px solid var(--sun)}
+.alert-row.i{border-left:2.5px solid var(--pulse)}
+.al-ico{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.al-ico.d{background:var(--fire3)}.al-ico.s{background:var(--sun3)}.al-ico.p{background:var(--pulse3)}
+.al-body{flex:1;min-width:0}
+.al-title{font-family:var(--f-ui);font-size:12px;font-weight:600;color:var(--sky);margin-bottom:2px}
+.al-desc{font-family:var(--f-body);font-size:11px;color:var(--sky2);line-height:1.4}
+.al-foot{display:flex;align-items:center;gap:5px;margin-top:5px;flex-wrap:wrap}
+.al-time{font-family:var(--f-data);font-size:9px;color:var(--wire3)}
+.al-arrow{width:14px;height:14px;stroke:var(--wire3);fill:none;stroke-width:2;flex-shrink:0;margin-top:4px}
+
+/* scene strip */
+.scene-strip{display:flex;gap:8px;padding:0 16px 12px;overflow-x:auto;scrollbar-width:none}
+.scene-strip::-webkit-scrollbar{display:none}
+.scene-btn{flex-shrink:0;background:var(--ink2);border:1px solid var(--wire);border-radius:var(--r16);padding:9px 13px;display:flex;align-items:center;gap:7px;cursor:pointer;transition:all .2s}
+.scene-btn:hover{border-color:var(--wire2)}
+.scene-btn.on{border-color:rgba(0,229,200,.4);background:rgba(0,229,200,.06)}
+.scene-btn .si{font-size:15px}
+.scene-btn .sn{font-family:var(--f-ui);font-size:11px;font-weight:500;color:var(--sky2)}
+.scene-btn.on .sn{color:var(--pulse)}
+.scene-btn .ss{font-family:var(--f-data);font-size:9px;color:var(--pulse)}
+
+/* sensor row */
+.sensor-row{display:flex;gap:6px;padding:0 16px 12px;overflow-x:auto;scrollbar-width:none}
+.sensor-row::-webkit-scrollbar{display:none}
+.sens-pill{flex-shrink:0;background:var(--ink2);border:1px solid var(--wire);border-radius:8px;padding:6px 11px;display:flex;align-items:center;gap:5px}
+.sens-dot{width:6px;height:6px;border-radius:50%}
+.sens-val{font-family:var(--f-data);font-size:11px;color:var(--sky)}
+.sens-key{font-family:var(--f-body);font-size:10px;color:var(--wire3)}
+
+/* MEMORY bar */
+.mem-summary{margin:10px 16px 6px;background:var(--ink2);border:1px solid var(--wire);border-radius:var(--r12);padding:12px}
+.mem-label{font-family:var(--f-data);font-size:9px;color:var(--wire3);margin-bottom:8px;letter-spacing:1px}
+.mem-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.mem-who{font-family:var(--f-ui);font-size:11px;font-weight:500;width:32px;color:var(--sky2)}
+.mem-prog{flex:1;height:4px;background:var(--wire);border-radius:2px;overflow:hidden}
+.mem-prog-fill{height:100%;border-radius:2px}
+.mem-pct{font-family:var(--f-data);font-size:10px;width:28px;text-align:right}
+
+/* AI ENTRY FAB */
+.ai-fab{
+  position:absolute;bottom:88px;right:18px;z-index:30;
+  width:52px;height:52px;border-radius:50%;
+  background:rgba(0,229,200,.14);border:1.5px solid rgba(0,229,200,.45);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:all .2s;
+}
+.ai-fab:hover{background:rgba(0,229,200,.22);transform:scale(1.06)}
+.ai-fab svg{width:22px;height:22px;stroke:var(--pulse);fill:none;stroke-width:1.5}
+
+/* animations */
+@keyframes fade-up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.fu{animation:fade-up .4s ease both}
+.fu1{animation:fade-up .4s .08s ease both}
+.fu2{animation:fade-up .4s .16s ease both}
+.fu3{animation:fade-up .4s .24s ease both}
+.fu4{animation:fade-up .4s .32s ease both}
+</style>
+</head>
+<body>
+
+<div class="device">
+  <div class="island"><div class="island-cam"></div><div class="island-dot"></div></div>
+  <div class="sbar">
+    <span class="sbar-time" id="clk">14:32</span>
+    <div class="sbar-icons">
+      <svg viewBox="0 0 24 24"><path d="M1 6s4-4 11-4 11 4 11 4M5 10s2.5-2.5 7-2.5 7 2.5 7 2.5M9 14s1.5-1.5 3-1.5 3 1.5 3 1.5M12 18h.01"/></svg>
+      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="18" height="11" rx="2"/><path d="M22 11v3"/></svg>
+    </div>
+  </div>
+
+  <!-- toast -->
+  <div class="toast" id="toast">
+    <span class="toast-icon" id="t-icon">⚠️</span>
+    <span class="toast-body" id="t-body"></span>
+    <span class="toast-close" onclick="hideToast()">✕</span>
+  </div>
+
+  <div class="screen-wrap">
+
+    <!-- ══════════════════════════════
+         S-HOME
+    ══════════════════════════════ -->
+    <div class="screen active" id="s-home">
+      <!-- AI FAB -->
+      <div class="ai-fab" onclick="go('s-ai');navOn('n-ai')">
+        <svg viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636-.707.707M21 12h-1M4 12H3m3.343-5.657-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386z"/></svg>
+      </div>
+
+      <!-- HERO -->
+      <div class="home-hero">
+        <div class="hero-left">
+          <div class="date" id="datestr">2026年4月3日 星期五</div>
+          <div class="greet">下午好，建国 👋</div>
+          <div class="sub">3 位在家 · 38 设备在线 · <span class="warn">3 条关怀提醒</span></div>
+        </div>
+        <div class="hero-av" onclick="go('s-profile');navOn('n-me')">王</div>
+      </div>
+
+      <!-- VLOG -->
+      <div class="vlog-wrap fu" onclick="go('s-vlog')">
+        <div class="vlog-thumb">
+          <div class="vlog-scenes">
+            <div class="vs">
+              <div class="vs-emoji">🛋️</div><div class="vs-room">客厅</div>
+              <div class="vs-ai-tag"><div class="vs-ai-inner cat-warn">⚠ 久坐87min</div></div>
+            </div>
+            <div class="vs">
+              <div class="vs-emoji">🍳</div><div class="vs-room">厨房</div>
+              <div class="vs-ai-tag"><div class="vs-ai-inner cat-ok">妈妈·正常</div></div>
+            </div>
+            <div class="vs">
+              <div class="vs-emoji">👶</div><div class="vs-room">儿童房</div>
+              <div class="vs-ai-tag"><div class="vs-ai-inner cat-vi">宝宝·玩耍</div></div>
+            </div>
+          </div>
+          <div class="vlog-overlay-top">
+            <div class="cam-rec"><div class="rec-blink"></div>8路融合</div>
+            <div class="chip chip-pulse">AI剪辑 · 2分38秒</div>
+          </div>
+          <div class="vlog-play"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+        </div>
+        <div class="vlog-info">
+          <div class="vlog-title">今日家庭 Vlog · AI 自动生成</div>
+          <div class="vlog-desc">AI综合今日8路摄像、IoT传感及健康数据生成。<span style="color:var(--sun)">重点：奶奶活动量 -42%，爸爸血压偏高 +11%。</span>宝宝午休正常，妈妈 13:35 回家。</div>
+          <div class="vlog-tags">
+            <span class="chip chip-fire">⚠ 关怀×3</span>
+            <span class="chip chip-pulse">AI多模融合</span>
+            <span class="chip chip-sky">安全：优</span>
+            <span class="chip chip-violet">记忆更新×12</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ALERTS -->
+      <div class="sec-row fu1">
+        <div class="sec-title">今日关注</div>
+        <div class="sec-link" onclick="go('s-care');navOn('n-care')">全部 →</div>
+      </div>
+      <div class="alert-wrap fu1">
+        <div class="alert-row u" onclick="go('s-care-d1')">
+          <div class="al-ico d">🧓</div>
+          <div class="al-body">
+            <div class="al-title">久坐预警 · 奶奶已静坐 87 分钟</div>
+            <div class="al-desc">AI姿态识别超标27分钟，今日活动量 -42%</div>
+            <div class="al-foot"><span class="al-time">14:32</span><span class="chip chip-sun" style="font-size:9px;padding:1px 6px">视觉AI</span><span class="chip chip-sun" style="font-size:9px;padding:1px 6px">关怀模式</span></div>
+          </div>
+          <svg class="al-arrow" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="alert-row w" onclick="go('s-care-d2')">
+          <div class="al-ico s">❤️</div>
+          <div class="al-body">
+            <div class="al-title">血压偏高 · 爸爸 142/91 mmHg</div>
+            <div class="al-desc">较7日均值偏高11%，连续3周周五偏高</div>
+            <div class="al-foot"><span class="al-time">14:18</span><span class="chip chip-sun" style="font-size:9px;padding:1px 6px">健康传感</span></div>
+          </div>
+          <svg class="al-arrow" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="alert-row i" onclick="go('s-care-d3')">
+          <div class="al-ico p">💊</div>
+          <div class="al-body">
+            <div class="al-title">用药提醒 · 奶奶 15:00 降压药</div>
+            <div class="al-desc">28分钟后自动播报，可提前确认</div>
+            <div class="al-foot"><span class="al-time">预计15:00</span><span class="chip chip-pulse" style="font-size:9px;padding:1px 6px">医嘱计划</span></div>
+          </div>
+          <svg class="al-arrow" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+      </div>
+
+      <!-- AI NEW RULES -->
+      <div class="sec-row fu2">
+        <div class="sec-title">AI 新生成规则 · 待确认</div>
+        <div class="sec-link" onclick="go('s-rules')">管理 →</div>
+      </div>
+      <div class="fu2">
+        <div class="rule-card violet" onclick="go('s-rule-d1')">
+          <div class="rule-hd">
+            <div class="rule-icon ri-v"><svg viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636-.707.707M21 12h-1M4 12H3m3.343-5.657-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386z"/></svg></div>
+            <div class="rule-title">周五下午奶奶关怀加强监测</div>
+            <span class="chip chip-violet" style="font-size:9px">待确认</span>
+          </div>
+          <div class="rule-body-text">AI基于47天数据发现每周五14:00–16:00奶奶活动量持续偏低，自动生成加强监测规则。</div>
+          <div class="rule-actions">
+            <div class="btn btn-pulse" style="font-size:10px;padding:5px 10px" onclick="event.stopPropagation();showToast('✅','规则已启用')">✓ 启用</div>
+            <div class="btn btn-ghost" style="font-size:10px;padding:5px 10px" onclick="event.stopPropagation()">稍后</div>
+            <div class="btn btn-ghost" style="font-size:10px;padding:5px 10px" onclick="event.stopPropagation();go('s-rule-d1')">详情</div>
+          </div>
+        </div>
+        <div class="rule-card pulse" onclick="go('s-rule-d2')" style="margin-top:0">
+          <div class="rule-hd">
+            <div class="rule-icon ri-p"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg></div>
+            <div class="rule-title">宝宝午休降噪场景</div>
+            <span class="chip chip-pulse" style="font-size:9px">待确认</span>
+          </div>
+          <div class="rule-body-text">AI识别宝宝午休规律（13:10±8min），建议自动关闭客厅音响、调暗儿童房灯光。</div>
+          <div class="rule-actions">
+            <div class="btn btn-pulse" style="font-size:10px;padding:5px 10px" onclick="event.stopPropagation();showToast('✅','场景已创建')">✓ 创建场景</div>
+            <div class="btn btn-ghost" style="font-size:10px;padding:5px 10px" onclick="event.stopPropagation()">稍后</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MEMBERS -->
+      <div class="sec-row fu3">
+        <div class="sec-title">家庭成员</div>
+        <div class="sec-link" onclick="go('s-members')">详情 →</div>
+      </div>
+      <div class="hscroll fu3">
+        <div class="m-chip alert" onclick="go('s-mem-grandma')">
+          <div class="m-av" style="background:rgba(255,192,64,.12);color:var(--sun)">奶<div class="m-online" style="background:var(--pulse)"></div></div>
+          <div class="m-name">奶奶</div>
+          <div class="m-badge mb-s">⚠ 关注</div>
+        </div>
+        <div class="m-chip" onclick="go('s-mem-dad')">
+          <div class="m-av" style="background:rgba(0,229,200,.12);color:var(--pulse)">王<div class="m-online" style="background:var(--pulse)"></div></div>
+          <div class="m-name">爸爸</div>
+          <div class="m-badge mb-s">监测中</div>
+        </div>
+        <div class="m-chip" onclick="go('s-mem-mom')">
+          <div class="m-av" style="background:rgba(0,229,200,.12);color:var(--pulse)">林<div class="m-online" style="background:var(--pulse)"></div></div>
+          <div class="m-name">妈妈</div>
+          <div class="m-badge mb-p">正常</div>
+        </div>
+        <div class="m-chip" onclick="go('s-mem-baby')">
+          <div class="m-av" style="background:rgba(176,96,255,.12);color:var(--violet)">宝<div class="m-online" style="background:var(--pulse)"></div></div>
+          <div class="m-name">宝宝</div>
+          <div class="m-badge mb-v">玩耍中</div>
+        </div>
+      </div>
+
+      <!-- MEMORY SUMMARY -->
+      <div class="mem-summary fu3">
+        <div class="mem-label">AI 记忆档案 · 置信度进化</div>
+        <div class="mem-row"><span class="mem-who">奶奶</span><div class="mem-prog"><div class="mem-prog-fill" style="width:74%;background:var(--sun2)"></div></div><span class="mem-pct" style="color:var(--sun)">74%</span></div>
+        <div class="mem-row"><span class="mem-who">爸爸</span><div class="mem-prog"><div class="mem-prog-fill" style="width:88%;background:var(--pulse2)"></div></div><span class="mem-pct" style="color:var(--pulse)">88%</span></div>
+        <div class="mem-row"><span class="mem-who">妈妈</span><div class="mem-prog"><div class="mem-prog-fill" style="width:92%;background:var(--pulse2)"></div></div><span class="mem-pct" style="color:var(--pulse)">92%</span></div>
+        <div class="mem-row" style="margin-bottom:0"><span class="mem-who">宝宝</span><div class="mem-prog"><div class="mem-prog-fill" style="width:81%;background:var(--violet2)"></div></div><span class="mem-pct" style="color:var(--violet)">81%</span></div>
+      </div>
+
+      <!-- SCENES -->
+      <div class="sec-row fu4"><div class="sec-title">场景</div><div class="sec-link" onclick="go('s-scenes')">全部 →</div></div>
+      <div class="scene-strip fu4">
+        <div class="scene-btn on"><span class="si">🏠</span><div><div class="sn">在家模式</div><div class="ss">运行中</div></div></div>
+        <div class="scene-btn" onclick="showToast('🌙','睡眠模式已启动')"><span class="si">🌙</span><div class="sn">睡眠</div></div>
+        <div class="scene-btn" onclick="showToast('🚶','离家模式已启动')"><span class="si">🚶</span><div class="sn">离家</div></div>
+        <div class="scene-btn" onclick="showToast('🎬','观影模式已启动')"><span class="si">🎬</span><div class="sn">观影</div></div>
+        <div class="scene-btn" onclick="go('s-scenes')"><span class="si">✨</span><div class="sn">AI创建</div></div>
+      </div>
+
+      <!-- DEVICES -->
+      <div class="sec-row fu4"><div class="sec-title">设备快控</div><div class="sec-link" onclick="go('s-devices');navOn('n-dev')">全部 →</div></div>
+      <div class="hscroll fu4">
+        <div class="dev-chip on" onclick="go('s-dev-detail')"><div class="dev-ico">💡</div><div class="dev-name">客厅灯</div><div class="dev-val">80%暖白</div></div>
+        <div class="dev-chip on"><div class="dev-ico">❄️</div><div class="dev-name">空调</div><div class="dev-val">26°C</div></div>
+        <div class="dev-chip"><div class="dev-ico">🪟</div><div class="dev-name">窗帘</div><div class="dev-val">已关闭</div></div>
+        <div class="dev-chip on"><div class="dev-ico">🔒</div><div class="dev-name">门锁</div><div class="dev-val">已锁定</div></div>
+        <div class="dev-chip alert"><div class="dev-ico">🌬️</div><div class="dev-name">净化器</div><div class="dev-val" style="color:var(--sun)">滤网警告</div></div>
+      </div>
+
+      <!-- SENSORS -->
+      <div class="sec-row fu4"><div class="sec-title">环境传感</div><div class="sec-link" onclick="go('s-sensors')">详情 →</div></div>
+      <div class="sensor-row fu4" style="margin-bottom:16px">
+        <div class="sens-pill"><div class="sens-dot" style="background:var(--pulse)"></div><span class="sens-val">24°C</span><span class="sens-key"> 室温</span></div>
+        <div class="sens-pill"><div class="sens-dot" style="background:var(--sky3)"></div><span class="sens-val">58%</span><span class="sens-key"> 湿度</span></div>
+        <div class="sens-pill"><div class="sens-dot" style="background:var(--pulse)"></div><span class="sens-val">412ppm</span><span class="sens-key"> CO₂</span></div>
+        <div class="sens-pill"><div class="sens-dot" style="background:var(--sun)"></div><span class="sens-val" style="color:var(--sun)">142/91</span><span class="sens-key"> 血压</span></div>
+        <div class="sens-pill"><div class="sens-dot" style="background:var(--pulse)"></div><span class="sens-val">72bpm</span><span class="sens-key"> 心率</span></div>
+      </div>
+    </div><!-- /s-home -->
+
+
+    <!-- ══════════════════════════════
+         S-VLOG: Vlog Player
+    ══════════════════════════════ -->
+    <div class="screen" id="s-vlog">
+      <div class="page-hd">
+        <div class="back-btn" onclick="back()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <div class="page-hd-info"><div class="page-hd-title">今日家庭 Vlog</div><div class="page-hd-sub">AI 多摄融合 · 2026-04-03</div></div>
+        <div style="width:34px"></div>
+      </div>
+      <!-- player -->
+      <div style="position:relative;height:200px;background:var(--ink3)">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);height:100%;gap:1px">
+          <div class="vs" style="background:rgba(255,192,64,.05)"><div class="vs-emoji" style="font-size:32px">🛋️</div><div class="vs-room">客厅</div><div class="vs-ai-tag"><div class="vs-ai-inner cat-warn">⚠ 奶奶久坐</div></div></div>
+          <div class="vs"><div class="vs-emoji" style="font-size:32px">🍳</div><div class="vs-room">厨房</div><div class="vs-ai-tag"><div class="vs-ai-inner cat-ok">妈妈·正常</div></div></div>
+          <div class="vs"><div class="vs-emoji" style="font-size:32px">👶</div><div class="vs-room">儿童房</div><div class="vs-ai-tag"><div class="vs-ai-inner cat-vi">宝宝·玩耍</div></div></div>
+        </div>
+        <div style="position:absolute;top:8px;left:10px;display:flex;gap:5px">
+          <div class="cam-rec"><div class="rec-blink"></div>8路融合</div>
+          <div class="chip chip-pulse" style="font-size:9px">VisionLM</div>
+        </div>
+      </div>
+      <!-- controls -->
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--ink2);border-top:1px solid var(--wire)">
+        <div style="width:32px;height:32px;border-radius:50%;background:rgba(0,229,200,.15);border:1px solid rgba(0,229,200,.4);display:flex;align-items:center;justify-content:center;cursor:pointer">
+          <svg style="width:14px;height:14px;fill:var(--pulse);margin-left:1px" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </div>
+        <div style="flex:1;height:3px;background:var(--wire);border-radius:2px;cursor:pointer" onclick="seekVid(event)">
+          <div style="width:34%;height:100%;background:var(--pulse);border-radius:2px" id="vp"></div>
+        </div>
+        <span style="font-family:var(--f-data);font-size:10px;color:var(--wire3)">0:54 / 2:38</span>
+      </div>
+      <!-- moments -->
+      <div style="padding:12px 14px 6px;font-family:var(--f-data);font-size:9px;color:var(--wire3);letter-spacing:1px">关键时刻 · 点击跳转</div>
+      <div style="padding:0 14px 12px">
+        <div class="vkm" style="border-color:rgba(255,192,64,.3)" onclick="showToast('⏩','已跳转至 00:12')">
+          <span class="vkm-ts" style="color:var(--sun)">00:12</span>
+          <span class="vkm-title">奶奶入座·AI开始姿态追踪</span>
+          <span class="chip chip-sun" style="font-size:9px">关怀</span>
+        </div>
+        <div class="vkm" onclick="showToast('⏩','已跳转至 00:47')">
+          <span class="vkm-ts">00:47</span>
+          <span class="vkm-title">宝宝午休结束·起床活动</span>
+          <span class="chip chip-violet" style="font-size:9px">成长</span>
+        </div>
+        <div class="vkm" onclick="showToast('⏩','已跳转至 01:22')">
+          <span class="vkm-ts">01:22</span>
+          <span class="vkm-title">妈妈回家·门口人脸识别</span>
+          <span class="chip chip-pulse" style="font-size:9px">安全</span>
+        </div>
+        <div class="vkm" onclick="showToast('⏩','已跳转至 02:06')">
+          <span class="vkm-ts">02:06</span>
+          <span class="vkm-title">爸爸血压偏高·穿戴预警</span>
+          <span class="chip chip-sun" style="font-size:9px">健康</span>
+        </div>
+      </div>
+      <div class="ai-block">
+        <div class="ai-block-label">AI 今日摘要 · 多模态分析</div>
+        <div class="ai-block-text">综合今日8路摄像、47项IoT传感、4位成员健康数据：家庭整体安全，<span style="color:var(--sun)">重点关注奶奶活动量（-42%）及爸爸血压（+11%）</span>。宝宝午休规律稳定，妈妈13:35回家后厨房活动正常。</div>
+      </div>
+      <div style="height:16px"></div>
+    </div><!-- /s-vlog -->
+
+
+    <!-- ══════════════════════════════
+         S-CARE: Care Center
+    ══════════════════════════════ -->
+    <div class="screen" id="s-care">
+      <div class="page-hd">
+        <div class="back-btn" onclick="back()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <div class="page-hd-info"><div class="page-hd-title">主动关怀</div><div class="page-hd-sub">3 条未处置</div></div>
+        <div style="width:34px"></div>
+      </div>
+      <div class="ai-block" style="margin-top:10px">
+        <div class="ai-block-label">今日关怀评级 · AI综合</div>
+        <div class="ai-block-text">家庭安全指数 94/100，健康关注指数 <span style="color:var(--sun)">67/100</span>。奶奶下午时段为高风险窗口，血压+活动量双预警需同步处置。</div>
+      </div>
+      <div class="card" style="margin:10px 16px">
+        <div class="care-item urgent" onclick="go('s-care-d1')">
+          <div class="ci-icon d">🧓</div>
+          <div class="ci-body">
+            <div class="ci-title">久坐预警 · 超标 27 分钟</div>
+            <div class="ci-desc">奶奶 · 客厅 · 视觉AI姿态检测</div>
+            <div class="ci-foot"><span class="chip chip-fire" style="font-size:9px">紧急</span><span class="chip chip-sun" style="font-size:9px">视觉AI</span><span class="ci-time">14:32</span></div>
+          </div>
+          <svg class="ci-arr" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="div"></div>
+        <div class="care-item warn" onclick="go('s-care-d2')">
+          <div class="ci-icon s">❤️</div>
+          <div class="ci-body">
+            <div class="ci-title">血压偏高 · 风险中等</div>
+            <div class="ci-desc">爸爸 · 142/91 mmHg · 穿戴传感</div>
+            <div class="ci-foot"><span class="chip chip-sun" style="font-size:9px">中等</span><span class="ci-time">14:18</span></div>
+          </div>
+          <svg class="ci-arr" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="div"></div>
+        <div class="care-item" onclick="go('s-care-d3')">
+          <div class="ci-icon p">💊</div>
+          <div class="ci-body">
+            <div class="ci-title">用药提醒 · 15:00</div>
+            <div class="ci-desc">奶奶 · 降压药 · 医嘱计划</div>
+            <div class="ci-foot"><span class="chip chip-pulse" style="font-size:9px">28min后</span></div>
+          </div>
+          <svg class="ci-arr" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+      </div>
+      <div class="sec-row"><div class="sec-title">今日已处置</div></div>
+      <div class="card" style="margin:0 16px;opacity:.6">
+        <div class="care-item">
+          <div class="ci-icon p">✅</div>
+          <div class="ci-body"><div class="ci-title" style="color:var(--sky2)">宝宝午休正常 · 已归档</div><div class="ci-desc">午休108min，符合健康标准</div></div>
+          <span class="chip chip-pulse" style="font-size:9px">13:58</span>
+        </div>
+      </div>
+      <div style="height:16px"></div>
+    </div><!-- /s-care -->
+
+
+    <!-- ══ CARE DETAIL 1: 久坐 ══ -->
+    <div class="screen" id="s-care-d1">
+      <div class="page-hd">
+        <div class="back-btn" onclick="back()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <div class="page-hd-info"><div class="page-hd-title">久坐关怀详情</div><div class="page-hd-sub">奶奶 · 14:32</div></div>
+        <div style="width:34px"></div>
+      </div>
+      <!-- camera -->
+      <div class="cam-mock" style="margin:12px 16px;height:130px">
+        <div class="cam-content"><div class="cam-emoji">🛋️</div><div class="cam-room">客厅实时画面</div></div>
+        <div class="cam-overlay">
+          <div style="display:flex;justify-content:space-between"><span class="cam-dark-label">CAM-01 客厅</span><span class="cam-rec"><span class="rec-blink"></span>REC</span></div>
+          <div><span class="cam-ai-tag cat-warn">⚠ 姿态识别: 久坐 87min · 骨骼检测</span></div>
+        </div>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric"><div class="metric-val fire">87min</div><div class="metric-key">久坐时长</div></div>
+        <div class="metric"><div class="metric-val sun">-42%</div><div class="metric-key">今日活动量</div></div>
+        <div class="metric"><div class="metric-val">72bpm</div><div class="metric-key">当前心率</div></div>
+      </div>
+      <div class="ai-block">
+        <div class="ai-block-label">AI 记忆关联 · 行为分析</div>
+        <div class="ai-block-text">连续3周周五下午14:00–16:00出现同类情况，AI已建立"下午低活动高风险"预测模型，本次预警提前5分钟触发。建议增加午后陪伴频率。</div>
+      </div>
+      <!-- trend chart -->
+      <div style="margin:0 16px 12px;background:var(--ink2);border:1px solid var(--wire);border-radius:var(--r12);padding:12px">
+        <div style="font-family:var(--f-data);font-size:9px;color:var(--wire3);margin-bottom:8px;letter-spacing:1px">今日活动量 vs 历史均值</div>
+        <svg width="100%" height="56" viewBox="0 0 300 56" preserveAspectRatio="none">
+          <polyline points="0,26 42,22 84,17 126,14 168,18 210,28 252,38 294,42" fill="none" stroke="rgba(50,96,138,.9)" stroke-width="1.5" stroke-dasharray="3 3"/>
+          <polyline points="0,30 42,28 84,26 126,32 168,38 210,46 252,50 294,52" fill="none" stroke="var(--sun)" stroke-width="2"/>
+          <text x="4" y="12" fill="#33608a" font-size="8" font-family="JetBrains Mono">历史均值</text>
+          <text x="4" y="54" fill="#ffc040" font-size="8" font-family="JetBrains Mono">今日 · -42%</text>
+        </svg>
+      </div>
+      <div style="display:flex;gap:8px;padding:0 16px 12px;flex-wrap:wrap">
+        <div class="btn btn-pulse" onclick="showToast('🔊','客厅音箱已播报语音提醒')">🔊 语音提醒</div>
+        <div class="btn btn-ghost" onclick="showToast('📱','消息已发送给家人')">通知家人</div>
+        <div class="btn btn-ghost" onclick="go('s-mem-grandma')">查看档案</div>
+      </div>
+      <div class="sec-row"><div class="sec-title">事件时间轴</div></div>
+      <div class="tl">
+        <div class="tl-item"><div class="tl-dot d">⚠️</div><div class="tl-body"><div class="tl-title">AI久坐预警触发</div><div class="tl-desc">连续静坐超87分钟，骨骼关键点检测确认无起身动作。</div><div class="tl-ai">记忆更新：下午14:00–16:00标注为高风险监测窗口</div></div><span class="tl-time">14:32</span></div>
+        <div class="tl-item"><div class="tl-dot p">🧠</div><div class="tl-body"><div class="tl-title">奶奶入座客厅</div><div class="tl-desc">摄像头检测到入座动作，AI开始姿态追踪计时。</div></div><span class="tl-time">13:05</span></div>
+        <div class="tl-item"><div class="tl-dot s">🍚</div><div class="tl-body"><div class="tl-title">午餐结束</div><div class="tl-desc">厨房摄像检测餐后返回客厅，活动量开始下降。</div></div><span class="tl-time">12:50</span></div>
+      </div>
+      <div style="height:16px"></div>
+    </div><!-- /s-care-d1 -->
+
+
+    <!-- ══ CARE DETAIL 2: 血压 ══ -->
+    <div class="screen" id="s-care-d2">
+      <div class="page-hd">
+        <div class="back-btn" onclick="back()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <div class="page-hd-info"><div class="page-hd-title">血压健康详情</div><div class="page-hd-sub">爸爸 · 14:18</div></div>
+        <div style="width:34px"></div>
+      </div>
+      <div class="metrics-grid" style="padding-top:12px">
+        <div class="metric"><div class="metric-val sun">142</div><div class="metric-key">收缩压 mmHg</div></div>
+        <div class="metric"><div class="metric-val sun">91</div><div class="metric-key">舒张压 mmHg</div></div>
+        <div class="metric"><div class="metric-val">76bpm</div><div class="metric-key">心率</div></div>
+      </div>
+      <div class="mini-stats">
+        <div class="mini-stat"><div class="mini-val sun" style="font-size:18px">+11%</div><div class="mini-lbl">较7日均值</div></div>
+        <div class="mini-stat"><div class="mini-val sun" style="font-size:18px">2340</div><div class="mini-lbl">今日步数（偏少）</div></div>
+      </div>
+      <div class="ai-block">
+        <div class="ai-block-label">AI 健康预测模型 v3 · 47天数据</div>
+        <div class="ai-block-text">发现爸爸每周三、五下午血压显著偏高，与工作日压力周期高度相关（r=0.82）。结合今日步数偏低，综合风险评级：中等。建议适量有氧运动。</div>
+      </div>
+      <div style="margin:0 16px 10px;background:var(--ink2);border:1px solid var(--wire);border-radius:var(--r12);padding:12px">
+        <div style="font-family:var(--f-data);font-size:9px;color:var(--wire3);margin-bottom:8px">近7日收缩压趋势</div>
+        <svg width="100%" height="56" viewBox="0 0 300 56" preserveAspectRatio="none">
+          <line x1="0" y1="24" x2="300" y2="24" stroke="rgba(255,69,96,.2)" stroke-width="1" stroke-dasharray="4 4"/>
+          <text x="240" y="22" fill="rgba(255,69,96,.5)" font-size="8" font-family="JetBrains Mono">140警戒</text>
+          <polyline points="0,38 50,34 100,30 150,26 200,32 250,24 300,20" fill="none" stroke="var(--fire)" stroke-width="2"/>
+        </svg>
+      </div>
+      <div style="display:flex;gap:8px;padding:0 16px 12px;flex-wrap:wrap">
+        <div class="btn btn-sun" onclick="showToast('📱','提醒已发送给爸爸')">通知爸爸</div>
+        <div class="btn btn-ghost" onclick="showToast('📅','就医提醒已设置')">预约提醒</div>
+        <div class="btn btn-ghost" onclick="go('s-mem-dad')">健康档案</div>
+      </div>
+      <div style="height:16px"></div>
+    </div><!-- /s-care-d2 -->
+
+
+    <!-- ══ CARE DETAIL 3: 用药 ══ -->
+    <div class="screen" id="s-care-d3">
+      <div class="page-hd">
+        <div class="back-btn" onclick="back()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <div class="page-hd-info"><div class="page-hd-title">用药提醒详情</div><div class="page-hd-sub">奶奶 · 今日15:00</div></div>
+        <div style="width:34px"></div>
+      </div>
+      <div style="margin:12px 16px;background:rgba(0,229,200,.06);border:1px solid rgba(0,229,200,.2);border-radius:var(--r16);padding:14px">
+        <div style="display:flex;align-items:center;gap:11px;margin-bottom:12px">
+          <div style="font-size:32px">💊</div>
+          <div><div style="font-family:var(--f-ui);font-size:14px;font-weight:700;color:var(--sky)">苯磺酸氨氯地平片</div><div style="font-family:var(--f-data);font-size:10px;color:var(--wire3);margin-top:2px">降压药 · 每日一次</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+          <div class="metric"><div class="metric-val" style="font-size:17px">15:00</div><div class="metric-key">服药时间</div></div>
+          <div class="metric"><div class="metric-val" style="font-size:17px;color:var(--sun)">28min</div><div class="metric-key">距服药</div></div>
+          <div class="metric"><div class="metric-val" style="font-size:17px;color:var(--pulse)">47天</div><div class="metric-key">连续服药</div></div>
+        </div>
+      </div>
+      <div class="ai-block">
+        <div class="ai-block-label">AI 服药记录与建议</div>
+        <div class="ai-block-text">连续47天用药记录完整。今日血压偏高（142/91），服药前建议避免剧烈活动。AI将在14:58预提醒，15:00再次提醒，若15分钟内无确认将发送家庭成员通知。</div>
+      </div>
+      <!-- weekly record -->
+      <div style="margin:0 16px 12px;background:var(--ink2);border:1px solid var(--wire);border-radius:var(--r12);overflow:hidden">
+        <div style="display:flex">
+          <div style="flex:1;padding:10px;text-align:center;border-right:1px solid var(--wire)"><div style="font-family:var(--f-data);font-size:10px;color:var(--wire3)">周一</div><div style="font-size:18px;margin:4px 0">✅</div><div style="font-family:var(--f-data);font-size:9px;color:var(--pulse)">15:00</div></div>
+          <div style="flex:1;padding:10px;text-align:center;border-right:1px solid var(--wire)"><div style="font-family:var(--f-data);font-size:10px;color:var(--wire3)">周二</div><div style="font-size:18px;margin:4px 0">✅</div><div style="font-family:var(--f-data);font-size:9px;color:var(--pulse)">15:02</div></div>
+          <div style="flex:1;padding:10px;text-align:center;border-right:1px solid var(--wire)"><div style="font-family:var(--f-data);font-size:10px;color:var(--wire3)">周三</div><div style="font-size:18px;margin:4px 0">✅</div><div style="font-family:var(--f-data);font-size:9px;color:var(--pulse)">14:58</div></div>
+          <div style="flex:1;padding:10px;text-align:center;border-right:1px solid var(--wire)"><div style="font-family:var(--f-data);font-size:10px;color:var(--wire3)">周四</div><div style="font-size:18px;margin:4px 0">✅</div><div style="font-family:var(--f-data);font-size:9px;color:var(--pulse)">15:05</div></div>
+          <div style="flex:1;padding:10px;text-align:center"><div style="font-family:var(--f-data);font-size:10px;color:var(--wire3)">周五</div><div style="font-size:18px;margin:4px 0">⏳</div><div style="font-family:var(--f-data);font-size:9px;color:var(--sun)">待服</div></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;padding:0 16px 16px">
+        <div class="btn btn-pulse" onclick="showToast('⏰','提前提醒已设置')">提前提醒</div>
+        <div class="btn btn-sun" onclick="showToast('✅','已标记为今日已服药')">确认已服药</div>
+      </div>
+    </div><!-- /s-care-d3 -->
+
+
+    <!-- ══════════════════════════════
+         S-MEMBERS
+    ══════════════════════════════ -->
+    <div class="screen" id="s-members">
+      <div class="page-hd">
+        <div class="back-btn" onclick="back()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <div class="page-hd-info"><div class="page-hd-title">家庭成员</div><div class="page-hd-sub">4位 · 3位在家</div></div>
+        <div style="width:34px"></div>
+      </div>
+      <div style="padding:10px 16px;display:flex;flex-direction:column;gap:8px">
+        <div style="background:rgba(255,192,64,.05);border:1px solid rgba(255,192,64,.3);border-radius:var(--r16);padding:13px;display:flex;align-items:center;gap:11px;cursor:pointer" onclick="go('s-mem-grandma')">
+          <div style="width:42px;height:42px;border-radius:50%;background:rgba(255,192,64,.12);border:1.5px solid rgba(255,192,64,.3);display:flex;align-items:center;justify-content:center;font-family:var(--f-ui);font-size:15px;font-weight:700;color:var(--sun)">奶</div>
+          <div style="flex:1"><div style="font-family:var(--f-ui);font-size:13px;font-weight:600;color:var(--sky)">奶奶 · 王淑芬</div><div style="font-family:var(--f-body);font-size:11px;color:var(--sun);margin-top:2px">⚠ 久坐87min · 活动量-42%</div></div>
+          <svg style="width:14px;height:14px;stroke:var(--wire3);fill:none;stroke-width:2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div style="background:rgba(255,192,64,.03);border:1px solid rgba(255,192,64,.2);border-radius:var(--r16);padding:13px;display:flex;align-items:center;gap:11px;cursor:pointer" onclick="go('s-mem-dad')">
+          <div style="width:42px;height:42px;border-radius:50%;background:rgba(0,229,200,.12);border:1.5px solid rgba(0,229,200,.3);display:flex;align-items:center;justify-content:center;font-family:var(--f-ui);font-size:15px;font-weight:700;color:var(--pulse)">王</div>
+          <div style="flex:1"><div style="font-family:var(--f-ui);font-size:13px;font-weight:600;color:var(--sky)">爸爸 · 王建国</div><div style="font-family:var(--f-body);font-size:11px;color:var(--sun);margin-top:2px">血压142/91 · 步数偏少</div></div>
+          <svg style="width:14px;height:14px;stroke:var(--wire3);fill:none;stroke-width:2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div style="background:var(--ink2);border:1px solid var(--wire);border-radius:var(--r16);padding:13px;display:flex;align-items:center;gap:11px;cursor:pointer" onclick="go('s-mem-mom')">
+          <div style="width:42px;height:42px;border-radius:50%;background:rgba(0,229,200,.12);border:1.5px solid rgba(0,229,200,.3);display:flex;align-items:center;justify-content:center;font-family:var(--f-ui);font-size:15px;font-weight:700;color:var(--pulse)">林</div>
+          <div style="flex:1"><div style="font-family:var(--f-ui);font-size:13px;font-weight:600;color:var(--sky)">妈妈 · 林秀华</div><div style="font-family:var(--f-body);font-size:11px;color:var(--pulse);margin-top:2px">状态良好 · 13:35回家</div></div>
+          <svg style="width:14px;height:14px;stroke:var(--wire3);fill:none;stroke-width:2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div style="background:var(--ink2);border:1px solid var(--wire);border-radius:var(--r16);padding:13px;display:flex;align-items:center;gap:11px;cursor:pointer" onclick="go('s-mem-baby')">
+          <div style="width:42px;height:42px;border-radius:50%;background:rgba(176,96,255,.12);border:1.5px solid rgba(176,96,255,.3);display:flex;align-items:center;justify-content:center;font-family:var(--f-ui);font-size:15px;font-weight:700;color:var(--violet)">宝</div>
+          <div style="flex:1"><div style="font-family:var(--f-ui);font-size:13px;font-weight:600;color:var(--sky)">宝宝 · 王小明</div><div style="font-family:var(--f-body);font-size:11px;color:var(--pulse);margin-top:2px">玩耍中 · 午休正常 · SpO₂ 97%</div></div>
+          <svg style="width:14px;height:14px;stroke:var(--wire3);fill:none;stroke-width:2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div style="background:var(--ink2);border:1px dashed var(--wire2);border-radius:var(--r16);padding:13px;display:flex;align-items:center;gap:11px;opacity:.5;cursor:pointer" onclick="showToast('➕','添加成员功能即将上线')">
+          <div style="width:42px;height:42px;border-radius:50%;background:var(--ink3);border:1px dashed var(--wire2);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--wire3)">+</div>
+          <div><div style="font-family:var(--f-ui);font-size:13px;color:var(--sky2)">添加家庭成员</div><div style="font-family:var(--f-data);font-size:10px;color:var(--wire3);margin-top:2px">最多支持 8 位</div></div>
+        </div>
+      </div>
+      <div style="height:16px"></div>
+    </div>
+
+
+    <!-- ══ MEMBER: GRANDMA ══ -->
+    <div class="screen" id="s-mem-grandma">
+      <div class="page-hd">
+        <div class="back-btn" onclick="back()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <div class="page-hd-info"><div class="page-hd-title">奶奶 · 健康档案</div><div class="page-hd-sub">关怀模式 · 第47天</div></div>
+        <div style="width:34px"></div>
+      </div>
+      <div style="padding:16px;background:var(--ink1);border-bottom:1px solid var(--wire);display:flex;align-items:center;gap:13px">
+        <div style="width:54px;height:54px;border-radius:50%;background:rgba(255,192,64,.12);border:2px solid rgba(255,192,64,.35);display:flex;align-items:center;justify-content:center;font-family:var(--f-ui);font-size:20px;font-weight:700;color:var(--sun);flex-shrink:0">奶</div>
+        <div style="flex:1"><div style="font-family:var(--f-ui);font-size:15px;font-weight:700;color:var(--sky)">王淑芬 · 72岁</div><div style="font-family:var(--f-data);font-size:10px;color:var(--wire3);margin-top:3px">关怀模式 · 重点监测</div><div style="display:flex;gap:4px;margin-top:6px"><span class="chip chip-sun" style="font-size:9px">活动偏低</span><span class="chip chip-pulse" style="font-size:9px">用药追踪</span><span class="chip chip-fire" style="font-size:9px">重点关注</span></div></div>
+        <div style="text-align:center"><div style="font-family:var(--f-data);font-size:22px;font-weight:500;color:var(--sun)">74</div><div style="font-family:var(--f-data);font-size:9px;color:var(--wire3)">档案置信</div></div>
+      </div>
+      <div class="metrics-grid"><div class="metric"><div class="metric-val sun">580</div><div class="metric-key">今日步数</div></div><div class="metric"><div class="metric-val">72bpm</div><div class="metric-key">心率</div></div><div class="metric"><div class="metric-val sun">-42%</div><div class="metric-key">活动量</div></div></div>
+      <div style="padding:0 16px 8px;font-family:var(--f-data);font-size:9px;color:var(--wire3);letter-spacing:1px">AI 行为记忆档案</div>
+      <div style="margin:0 16px 10px;background:var(--ink2);border:1px solid var(--wire);border-radius:var(--r12);padding:12px">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px"><span style="font-family:var(--f-ui);font-size:10px;color:var(--sky2);width:56px">作息规律</span><div class="prog-bar"><div class="prog-fill" style="width:72%;background:var(--sky3)"></div></div><span style="font-family:var(--f-data);font-size:10px;color:var(--sky2);width:28px;text-align:right">72</span></div>
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px"><span style="font-family:var(--f-ui);font-size:10px;color:var(--sky2);width:56px">健康状态</span><div class="prog-bar"><div class="prog-fill" style="width:58%;background:var(--sun2)"></div></div><span style="font-family:var(--f-data);font-size:10px;color:var(--sun);width:28px;text-align:right">58</span></div>
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px"><span style="font-family:var(--f-ui);font-size:10px;color:var(--sky2);width:56px">偏好稳定</span><div class="prog-bar"><div class="prog-fill" style="width:80%;background:var(--pulse2)"></div></div><span style="font-family:var(--f-data);font-size:10px;color:var(--pulse);width:28px;text-align:right">80</span></div>
+        <div style="display:flex;align-items:center;gap:7px"><span style="font-family:var(--f-ui);font-size:10px;color:var(--sky2);width:56px">活动模式</span><div class="prog-bar"><div class="prog-fill" style="width:62%;background:var(--sun2)"></div></div><span style="font-family:var(--f-data);font-size:10px;color:var(--sun);width:28px;text-align:right">62</span></div>
+      </div>
+      <div style="margin:0 16px 12px;display:grid;grid-template-columns:repeat(2,1fr);gap:7px">
+        <div style="background:var(--ink2);border:1px solid var(--wire);border-radius:var(--r10);padding:9px 11px"><div style="font-family:var(--f-data);font-size:11px;color:var(--pulse)">06:54–07:15</div><div style="font-family:var(--f-body);font-size:11px;color:var(--sky2);margin-top:2px">起床时间窗口</div></div>
+        <div style="background:var(--ink2);border:1px solid rgba(255,192,64,.2);border-radius:var(--r10);padding:9px 11px"><div style="font-family:var(--f-data);font-size:11px;color:var(--sun)">14:00–16:00</div><div style="font-family:var(--f-body);font-size:11px;color:var(--sky2);margin-top:2px">⚠ 低活动高风险</div></div>
+        <div style="background:var(--ink2);border:1px solid var(--wire);border-radius:var(--r10);padding:9px 11px"><div style="font-family:var(--f-data);font-size:11px;color:var(--pulse)">15:00 每日</div><div style="font-family:var(--f-body);font-size:11px;color:var(--sky2);margin-top:2px">降压药服用</div></div>
+        <div style="background:var(--ink2);border:1px solid var(--wire);border-radius:var(--r10);padding:9px 11px"><div style="font-family:var(--f-data);font-size:11px;color:var(--pulse)">22:30 左右</div><div style="font-family:var(--f-body);font-size:11px;color:var(--sky2);margin-top:2px">就寝时间</div></div>
+      </div>
+      <div style="display:flex;gap:8px;padding:0 16px 16px">
+        <div class="btn btn-pulse" onclick="go('s-ai')">AI问询状态 ↗</div>
+        <div class="btn btn-ghost" onclick="showToast('⚙️','关怀设置已打开')">编辑关怀设置</div>
+      </div>
+    </div>
+
+
+    <!-- ══ MEMBER: DAD ══ -->
+    <div class="screen" id="s-mem-dad">
+      <div class="page-hd">
+        <div class="back-btn" onclick="back()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <div class="page-hd-info"><div class="page-hd-title">爸爸 · 健康档案</div><div class="page-hd-sub">主账号 · 第47天</div></div>
+        <div style="width:34px"></div>
+      </div>
+      <div style="padding:16px;background:var(--ink1);border-bottom:1px solid var(--wire);display:flex;align-items:center;gap:13px">
+        <div style="width:54px;height:54px;border-radius:50%;background:rgba(0,229,200,.12);border:2px solid rgba(0,229,200,.35);display:flex;align-items:center;justify-content:center;font-family:var(--f-ui);font-size:20px;font-weight:700;color:var(--pulse);flex-shrink:0">王</div>
+        <div style="flex:1"><div style="font-family:var(--f-ui);font-size:15px;font-weight:700;color:var(--sky)">王建国 · 45岁</div><div style="font-family:var(--f-data);font-size:10px;color:var(--wire3);margin-top:3px">主账号 · 血压监测</div><div style="display:flex;gap:4px;margin-top:6px"><span class="chip chip-sun" style="font-size:9px">血压偏高</span><span class="chip chip-sky" style="font-size:9px">步数偏少</span></div></div>
+        <div style="text-align:center"><div style="font-family:var(--f-data);font-size:22px;font-weight:500;color:var(--pulse)">88</div><div style="font-family:var(--f-data);font-size:9px;color:var(--wire3)">档案置信</div></div>
+      </div>
+      <div class="metrics-grid"><div class="metric"><div class="metric-val sun" style="font-size:17px">142/91</div><div class="metric-key">血压 mmHg</div></div><div class="metric"><div class="metric-val">76bpm</div><div class="metric-key">心率</div></div><div class="metric"><div class="metric-val sun">2340</div><div class="metric-key">步数（偏少）</div></div></div>
+      <div class="ai-block">
+        <div class="ai-block-label">AI 健康洞察</div>
+        <div class="ai-block-text">血压与工作日压力周期相关性 r=0.82，周三/五下午为高风险时段。建议每日步数达标（目标8000步），适量有氧运动可有效降低血压风险。</div>
+      </div>
+      <div style="display:flex;gap:8px;padding:0 16px 16px">
+        <div class="btn btn-pulse" onclick="go('s-ai')">AI健康建议 ↗</div>
+        <div class="btn btn-ghost" onclick="showToast('⏰','运动提醒已设置')">设置运动提醒</div>
+      </div>
+    </div>
+
+
+    <!-- ══ MEMBER: MOM ══ -->
+    <div class="screen" id="s-mem-mom">
+      <div class="page-hd">
+        <div class="back-btn" onclick="back()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <div class="page-hd-info"><div class="page-hd-title">妈妈 · 档案</div><div class="page-hd-sub">子账号 · 状态良好</div></div>
+        <div style="width:34px"></div>
+      </div>
+      <div style="padding:16px;background:var(--ink1);border-bottom:1px solid var(--wire);display:flex;align-items:center;gap:13px">
+        <div style="width:54px;height:54px;border-radius:50%;background:rgba(0,229,200,.12);border:2px solid rgba(0,229,200,.35);display:flex;align-items:center;justify-content:center;font-family:var(--f-ui);font-size:20px;font-weight:700;color:var(--pulse)">林</div>
+        <div style="flex:1"><div style="font-family:var(--f-ui);font-size:15px;font-weight:700;color:var(--sky)">林秀华 · 38岁</div><div style="font-family:var(--f-data);font-size:10px;color:var(--wire3)">子账号 · 健康良好</div><div style="display:flex;gap:4px;margin-top:6px"><span class="chip chip-pulse" style="font-size:9px">健康良好</span><span class="chip chip-pulse" style="font-size:9px">作息规律</span></div></div>
+        <div style="text-align:center"><div style="font-family:var(--f-data);font-size:22px;font-weight:500;color:var(--pulse)">92</div><div style="font-family:var(--f-data);font-size:9px;color:var(--wire3)">档案置信</div></div>
+      </div>
+      <div class="metrics-grid"><div class="metric"><div class="metric-val">118/76</div><div class="metric-key">血压</div></div><div class="metric"><div class="metric-val">68bpm</div><div class="metric-key">心率</div></div><div class="metric"><div class="metric-val">8241</div><div class="metric-key">步数</div></div></div>
+      <div class="ai-block"><div class="ai-block-label">AI 状态摘要</div><div class="ai-block-text">今日各项健康指标正常，13:35回家，厨房活动中，作息符合历史规律。档案置信度92%，家庭成员中最高。</div></div>
+      <div style="height:16px"></div>
+    </div>
+
+
+    <!-- ══ MEMBER: BABY ══ -->
+    <div class="screen" id="s-mem-baby">
+      <div class="page-hd">
+        <div class="back-btn" onclick="back()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <div class="page-hd-info"><div class="page-hd-title">宝宝 · 成长档案</div><div class="page-hd-sub">儿童模式 · 第47天</div></div>
+        <div style="width:34px"></div>
+      </div>
+      <div style="padding:16px;background:var(--ink1);border-bottom:1px solid var(--wire);display:flex;align-items:center;gap:13px">
+        <div style="width:54px;height:54px;border-radius:50%;background:rgba(176,96,255,.12);border:2px solid rgba(176,96,255,.35);display:flex;align-items:center;justify-content:center;font-family:var(--f-ui);font-size:20px;font-weight:700;color:var(--violet)">宝</div>
+        <div style="flex:1"><div style="font-family:var(--f-ui);font-size:15px;font-weight:700;color:var(--sky)">王小明 · 3岁</div><div style="font-family:var(--f-data);font-size:10px;color:var(--wire3)">儿童模式 · 发育正常</div><div style="display:flex;gap:4px;margin-top:6px"><span class="chip chip-pulse" style="font-size:9px">发育正常</span><span class="chip chip-violet" style="font-size:9px">午休规律</span></div></div>
+        <div style="text-align:center"><div style="font-family:var(--f-data);font-size:22px;font-weight:500;color:var(--violet)">81</div><div style="font-family:var(--f-data);font-size:9px;color:var(--wire3)">档案置信</div></div>
+      </div>
+      <div class="metrics-grid"><div class="metric"><div class="metric-val violet">97%</div><div class="metric-key">SpO₂</div></div><div class="metric"><div class="metric-val">96bpm</div><div class="metric-key">心率</div></div><div class="metric"><div class="metric-val">108min</div><div class="metric-key">午休时长</div></div></div>
+      <div class="ai-block"><div class="ai-block-label">AI 成长记录</div><div class="ai-block-text">午休时间连续5天稳定在13:10±8分钟，睡眠时长105±12分钟，档案置信度81%已进入稳定态，触发午休降噪场景授权。</div></div>
+      <div style="height:16px"></div>
+    </div>
+
+
+    <!-- ══════════════════════════════
+         S-RULES
+    ══════════════════════════════ -->
+    <div class="screen" id="s-rules">
+      <div class="page-hd">
+        <div class="back-btn" onclick="back()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <div class="page-hd-info"><div class="page-hd-title">自动化规则</div><div class="page-hd-sub">12条启用 · 2条待确认</div></div>
+        <div style="width:34px"></div>
+      </div>
+      <div style="padding:10px 16px 0">
+        <div style="font-family:var(--f-data);font-size:9px;color:var(--violet);letter-spacing:1.5px;padding:4px 0 8px">AI 新生成 · 待确认</div>
+        <div class="rule-card violet" onclick="go('s-rule-d1')" style="margin:0 0 8px">
+          <div class="rule-hd"><div class="rule-icon ri-v"><svg viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636-.707.707M21 12h-1M4 12H3m3.343-5.657-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386z"/></svg></div><div class="rule-title">周五下午奶奶关怀加强</div><span class="chip chip-violet" style="font-size:9px">待确认</span></div>
+          <div class="rule-body-text">基于47天记忆数据，每周五14:00–16:00加强监测频率。</div>
+          <div class="rule-actions"><div class="btn btn-pulse" style="font-size:10px;padding:5px 10px" onclick="event.stopPropagation();showToast('✅','规则已启用')">启用</div><div class="btn btn-ghost" style="font-size:10px;padding:5px 10px">编辑</div><div class="btn btn-ghost" style="font-size:10px;padding:5px 10px">忽略</div></div>
+        </div>
+        <div class="rule-card pulse" onclick="go('s-rule-d2')" style="margin:0 0 12px">
+          <div class="rule-hd"><div class="rule-icon ri-p"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg></div><div class="rule-title">宝宝午休降噪场景</div><span class="chip chip-pulse" style="font-size:9px">待确认</span></div>
+          <div class="rule-body-text">识别宝宝午休规律，自动调暗灯光、关闭音响。</div>
+          <div class="rule-actions"><div class="btn btn-pulse" style="font-size:10px;padding:5px 10px" onclick="event.stopPropagation();showToast('✅','场景已创建')">创建场景</div><div class="btn btn-ghost" style="font-size:10px;padding:5px 10px">编辑</div></div>
+        </div>
+        <!-- active rules -->
+        <div style="font-family:var(--f-data);font-size:9px;color:var(--wire3);letter-spacing:1.5px;padding:4px 0 8px">已启用规则</div>
+        <div class="card" style="margin-bottom:14px">
+          <div style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--wire)"><span style="font-size:14px">🚪</span><div style="flex:1"><div style="font-family:var(--f-ui);font-size:12px;font-weight:500;color:var(--sky)">妈妈回家 → 回家场景联动</div><div style="font-family:var(--f-data);font-size:9px;color:var(--wire3);margin-top:2px">触发 31次</div></div><button class="tog on" onclick="event.stopPropagation()"></button></div>
+          <div style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--wire)"><span style="font-size:14px">🌙</span><div style="flex:1"><div style="font-family:var(--f-ui);font-size:12px;font-weight:500;color:var(--sky)">23:30 → 全屋睡眠模式</div><div style="font-family:var(--f-data);font-size:9px;color:var(--wire3);margin-top:2px">触发 47次</div></div><button class="tog on" onclick="event.stopPropagation()"></button></div>
+          <div style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--wire)"><span style="font-size:14px">🌡️</span><div style="flex:1"><div style="font-family:var(--f-ui);font-size:12px;font-weight:500;color:var(--sky)">爸爸到家 → 空调预冷</div><div style="font-family:var(--f-data);font-size:9px;color:var(--wire3);margin-top:2px">触发 23次</div></div><button class="tog on" onclick="event.stopPropagation()"></button></div>
+          <div style="display:flex;align-items:center;gap:10px;padding:11px 14px"><span style="font-size:14px">🔒</span><div style="flex:1"><div style="font-family:var(--f-ui);font-size:12px;font-weight:500;color:var(--sky)">全部离家 → 自动锁门布防</div><div style="font-family:var(--f-data);font-size:9px;color:var(--wire3);margin-top:2px">触发 18次</div></div><button class="tog on" onclick="event.stopPropagation()"></button></div>
+        </div>
+        <div class="btn btn-pulse" style="width:100%;justify-content:center;margin-bottom:16px" onclick="go('s-ai')">✨ 用自然语言创建新规则 ↗</div>
+      </div>
+    </div><!-- /s-rules -->
+
+
+    <!-- ══ RULE DETAIL 1 ══ -->
+    <div class="screen" id="s-rule-d1">
+      <div class="page-hd"><div class="back-btn" onclick="back()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-hd-info"><div class="page-hd-title">规则详情</div><div class="page-hd-sub">AI生成 · 待确认</div></div><div style="width:34px"></div></div>
+      <div style="margin:12px 16px;background:rgba(176,96,255,.06);border:1px solid rgba(176,96,255,.2);border-radius:var(--r16);overflow:hidden">
+        <div style="padding:13px;border-bottom:1px solid rgba(176,96,255,.15);display:flex;align-items:center;gap:9px">
+          <div class="rule-icon ri-v" style="width:30px;height:30px;border-radius:9px"><svg viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636-.707.707M21 12h-1M4 12H3m3.343-5.657-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386z"/></svg></div>
+          <div><div style="font-family:var(--f-ui);font-size:13px;font-weight:700;color:var(--sky)">周五下午奶奶关怀加强</div><div style="font-family:var(--f-data);font-size:9px;color:var(--violet);margin-top:2px">AI生成 · 基于47天记忆数据</div></div>
+        </div>
+        <div style="padding:13px">
+          <div style="font-family:var(--f-data);font-size:9px;color:var(--wire3);letter-spacing:1px;margin-bottom:9px">规则逻辑流程</div>
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <div style="display:flex;align-items:flex-start;gap:8px;padding:9px 10px;background:var(--ink3);border-radius:9px;border:1px solid var(--wire)"><div style="width:18px;height:18px;border-radius:50%;background:rgba(0,229,200,.15);color:var(--pulse);font-family:var(--f-data);font-size:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0">1</div><div style="font-family:var(--f-body);font-size:11px;color:var(--sky2)"><strong style="color:var(--pulse)">触发：</strong>每周五 14:00 激活，持续至 16:00</div></div>
+            <div style="text-align:center;font-family:var(--f-data);font-size:10px;color:var(--wire3)">↓</div>
+            <div style="display:flex;align-items:flex-start;gap:8px;padding:9px 10px;background:var(--ink3);border-radius:9px;border:1px solid var(--wire)"><div style="width:18px;height:18px;border-radius:50%;background:rgba(0,229,200,.15);color:var(--pulse);font-family:var(--f-data);font-size:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0">2</div><div style="font-family:var(--f-body);font-size:11px;color:var(--sky2)"><strong style="color:var(--pulse)">监测加强：</strong>姿态检测频率提升至每10分钟（默认60分钟）</div></div>
+            <div style="text-align:center;font-family:var(--f-data);font-size:10px;color:var(--wire3)">↓</div>
+            <div style="display:flex;align-items:flex-start;gap:8px;padding:9px 10px;background:var(--ink3);border-radius:9px;border:1px solid var(--wire)"><div style="width:18px;height:18px;border-radius:50%;background:rgba(0,229,200,.15);color:var(--pulse);font-family:var(--f-data);font-size:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0">3</div><div style="font-family:var(--f-body);font-size:11px;color:var(--sky2)"><strong style="color:var(--pulse)">预警：</strong>超过45分钟未活动，触发语音提醒</div></div>
+            <div style="text-align:center;font-family:var(--f-data);font-size:10px;color:var(--wire3)">↓</div>
+            <div style="display:flex;align-items:flex-start;gap:8px;padding:9px 10px;background:var(--ink3);border-radius:9px;border:1px solid var(--wire)"><div style="width:18px;height:18px;border-radius:50%;background:rgba(0,229,200,.15);color:var(--pulse);font-family:var(--f-data);font-size:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0">4</div><div style="font-family:var(--f-body);font-size:11px;color:var(--sky2)"><strong style="color:var(--pulse)">升级：</strong>若15分钟内无活动，向家庭成员发送App推送</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="ai-block"><div class="ai-block-label">AI 生成依据</div><div class="ai-block-text">连续3周（共21次统计）发现：奶奶每周五下午14:00–16:00活动量平均低于均值51%，该时段触发关怀提醒概率78%。规则置信度：82%。</div></div>
+      <div style="display:flex;gap:8px;padding:0 16px 16px">
+        <div class="btn btn-pulse" onclick="showToast('✅','规则已启用');back()">✓ 启用规则</div>
+        <div class="btn btn-ghost" onclick="go('s-ai')">AI编辑</div>
+        <div class="btn btn-fire" onclick="showToast('🗑️','规则已忽略');back()">忽略</div>
+      </div>
+    </div>
+
+
+    <!-- ══ RULE DETAIL 2 ══ -->
+    <div class="screen" id="s-rule-d2">
+      <div class="page-hd"><div class="back-btn" onclick="back()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-hd-info"><div class="page-hd-title">场景详情</div><div class="page-hd-sub">AI生成</div></div><div style="width:34px"></div></div>
+      <div style="margin:12px 16px;background:rgba(0,229,200,.05);border:1px solid rgba(0,229,200,.18);border-radius:var(--r16);overflow:hidden">
+        <div style="padding:13px;border-bottom:1px solid rgba(0,229,200,.12);display:flex;align-items:center;gap:9px">
+          <div class="rule-icon ri-p" style="width:30px;height:30px;border-radius:9px"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg></div>
+          <div><div style="font-family:var(--f-ui);font-size:13px;font-weight:700;color:var(--sky)">宝宝午休降噪场景</div><div style="font-family:var(--f-data);font-size:9px;color:var(--pulse);margin-top:2px">AI生成 · 置信度81%</div></div>
+        </div>
+        <div style="padding:13px;display:flex;flex-direction:column;gap:5px">
+          <div style="display:flex;align-items:flex-start;gap:8px;padding:9px 10px;background:var(--ink3);border-radius:9px;border:1px solid var(--wire)"><div style="width:18px;height:18px;border-radius:50%;background:rgba(0,229,200,.15);color:var(--pulse);font-family:var(--f-data);font-size:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0">1</div><div style="font-family:var(--f-body);font-size:11px;color:var(--sky2)"><strong style="color:var(--pulse)">触发：</strong>AI检测宝宝在儿童房入睡（时间窗口13:02–13:18）</div></div>
+          <div style="text-align:center;font-family:var(--f-data);font-size:10px;color:var(--wire3)">↓</div>
+          <div style="display:flex;align-items:flex-start;gap:8px;padding:9px 10px;background:var(--ink3);border-radius:9px;border:1px solid var(--wire)"><div style="width:18px;height:18px;border-radius:50%;background:rgba(0,229,200,.15);color:var(--pulse);font-family:var(--f-data);font-size:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0">2</div><div style="font-family:var(--f-body);font-size:11px;color:var(--sky2)"><strong style="color:var(--pulse)">执行：</strong>儿童房灯光调至10%暖光，客厅音响降至20%，推送通知</div></div>
+          <div style="text-align:center;font-family:var(--f-data);font-size:10px;color:var(--wire3)">↓</div>
+          <div style="display:flex;align-items:flex-start;gap:8px;padding:9px 10px;background:var(--ink3);border-radius:9px;border:1px solid var(--wire)"><div style="width:18px;height:18px;border-radius:50%;background:rgba(0,229,200,.15);color:var(--pulse);font-family:var(--f-data);font-size:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0">3</div><div style="font-family:var(--f-body);font-size:11px;color:var(--sky2)"><strong style="color:var(--pulse)">结束：</strong>检测到宝宝起床，场景自动解除，发送午休时长报告</div></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;padding:0 16px 16px">
+        <div class="btn btn-pulse" onclick="showToast('✅','场景已创建并启用');back()">✓ 创建场景</div>
+        <div class="btn btn-ghost" onclick="go('s-ai')">AI修改</div>
+      </div>
+    </div>
+
+
+    <!-- ══════════════════════════════
+         S-AI: AI ASSISTANT
+    ══════════════════════════════ -->
+    <div class="screen" id="s-ai">
+      <!-- AI header -->
+      <div style="padding:14px 18px;background:var(--ink1);border-bottom:1px solid var(--wire);display:flex;align-items:center;gap:12px">
+        <div style="width:42px;height:42px;border-radius:50%;background:rgba(0,229,200,.1);border:1.5px solid rgba(0,229,200,.35);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg style="width:20px;height:20px;stroke:var(--pulse);fill:none;stroke-width:1.5" viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636-.707.707M21 12h-1M4 12H3m3.343-5.657-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386z"/></svg>
+        </div>
+        <div style="flex:1">
+          <div style="font-family:var(--f-ui);font-size:13px;font-weight:700;color:var(--pulse)">AIBrain 智能助手</div>
+          <div style="font-family:var(--f-data);font-size:10px;color:var(--wire3);margin-top:2px">本地NPU推理 · 离线可用 · 第47天</div>
+        </div>
+        <div style="width:7px;height:7px;border-radius:50%;background:var(--pulse);animation:breathe 2s infinite"></div>
+      </div>
+
+      <!-- QUICK PROMPTS -->
+      <div style="padding:12px 16px 6px">
+        <div style="font-family:var(--f-data);font-size:9px;color:var(--wire3);letter-spacing:1.5px;margin-bottom:10px">💡 示例指令 · 点击填入</div>
+
+        <div style="font-family:var(--f-data);font-size:9px;color:var(--violet);margin-bottom:6px;letter-spacing:1px">— 智能规则创建 —</div>
+        <div class="qp-item" onclick="fillAI('每天晚上10点提醒爸爸量血压，如果连续3天偏高自动通知我')">
+          <span class="qp-emoji">📊</span>
+          <div class="qp-text">每天晚上10点提醒爸爸量血压，连续3天偏高自动通知我</div>
+          <span class="qp-type qt-rule">规则</span>
+        </div>
+        <div class="qp-item" onclick="fillAI('凌晨1点后如果客厅检测到有人活动，触发安防警报并给我推送摄像截图')">
+          <span class="qp-emoji">🔒</span>
+          <div class="qp-text">凌晨1点后客厅有人活动，触发警报并推送摄像截图给我</div>
+          <span class="qp-type qt-rule">安防规则</span>
+        </div>
+        <div class="qp-item" onclick="fillAI('如果CO₂浓度超过1000ppm，自动打开窗户或排气扇，并发通知')">
+          <span class="qp-emoji">🌬️</span>
+          <div class="qp-text">CO₂浓度超过1000ppm，自动开窗并通知我</div>
+          <span class="qp-type qt-rule">环境规则</span>
+        </div>
+        <div class="qp-item" onclick="fillAI('宝宝睡觉时如果哭了超过1分钟，立刻给我和妈妈同时推送通知')">
+          <span class="qp-emoji">👶</span>
+          <div class="qp-text">宝宝睡觉时哭了超过1分钟，立刻同时通知我和妈妈</div>
+          <span class="qp-type qt-rule">儿童规则</span>
+        </div>
+
+        <div style="font-family:var(--f-data);font-size:9px;color:var(--sun);margin:10px 0 6px;letter-spacing:1px">— 一句话设置提醒 —</div>
+        <div class="qp-item" onclick="fillAI('每周三下午4点，提醒奶奶喝水并起来走走，播放她喜欢的音乐')">
+          <span class="qp-emoji">⏰</span>
+          <div class="qp-text">每周三下午4点提醒奶奶喝水走走，并播放她喜欢的音乐</div>
+          <span class="qp-type qt-remind">提醒</span>
+        </div>
+        <div class="qp-item" onclick="fillAI('设置每天早上8点的家庭晨间播报：天气、健康提醒、今日待确认规则')">
+          <span class="qp-emoji">☀️</span>
+          <div class="qp-text">每天8点晨间播报：天气+健康提醒+今日待确认规则</div>
+          <span class="qp-type qt-remind">晨报</span>
+        </div>
+        <div class="qp-item" onclick="fillAI('如果爸爸今天还没运动，晚上7点提醒他去散步，并显示今日步数')">
+          <span class="qp-emoji">🏃</span>
+          <div class="qp-text">爸爸今天没运动，晚上7点提醒去散步，显示今日步数</div>
+          <span class="qp-type qt-remind">健康提醒</span>
+        </div>
+
+        <div style="font-family:var(--f-data);font-size:9px;color:var(--pulse);margin:10px 0 6px;letter-spacing:1px">— 自然语言查询 —</div>
+        <div class="qp-item" onclick="fillAI('奶奶今天的情况怎么样？帮我汇总一下她的活动量和健康数据')">
+          <span class="qp-emoji">🧓</span>
+          <div class="qp-text">奶奶今天情况怎样？汇总她的活动量和健康数据</div>
+          <span class="qp-type qt-query">查询</span>
+        </div>
+        <div class="qp-item" onclick="fillAI('帮我生成本周家庭健康报告，重点分析奶奶和爸爸的健康趋势')">
+          <span class="qp-emoji">📋</span>
+          <div class="qp-text">生成本周家庭健康报告，重点分析奶奶和爸爸的趋势</div>
+          <span class="qp-type qt-query">报告</span>
+        </div>
+        <div class="qp-item" onclick="fillAI('最近两周家里空气质量如何？和上个月相比有变化吗')">
+          <span class="qp-emoji">💨</span>
+          <div class="qp-text">最近两周家里空气质量如何？和上月对比</div>
+          <span class="qp-type qt-query">环境查询</span>
+        </div>
+
+        <div style="font-family:var(--f-data);font-size:9px;color:var(--sky3);margin:10px 0 6px;letter-spacing:1px">— 智能场景创建 —</div>
+        <div class="qp-item" onclick="fillAI('帮我创建一个场景：妈妈回家后自动开厨房灯、播放她喜欢的轻音乐，空调调到24度')">
+          <span class="qp-emoji">🏠</span>
+          <div class="qp-text">妈妈回家后自动开厨房灯、播放轻音乐、空调调24°C</div>
+          <span class="qp-type qt-scene">场景</span>
+        </div>
+        <div class="qp-item" onclick="fillAI('创建睡前模式：晚上11点关闭所有灯光，锁门，空调调至26度，播放白噪音10分钟')">
+          <span class="qp-emoji">🌙</span>
+          <div class="qp-text">晚上11点睡前模式：关灯锁门、空调26°C、白噪音10分钟</div>
+          <span class="qp-type qt-scene">场景</span>
+        </div>
+      </div>
+
+      <!-- CHAT -->
+      <div style="padding:6px 0 2px;font-family:var(--f-data);font-size:9px;color:var(--wire3);letter-spacing:1.5px;text-align:center">— 对话记录 —</div>
+      <div class="chat-wrap">
+        <div class="msg-row ai">
+          <div class="msg-who vi">AIBrain</div>
+          <div class="msg-bub">您好！当前家庭有 3 条关怀提醒，奶奶已久坐 87 分钟，需要我帮您播报语音提醒吗？另外爸爸血压偏高，建议提醒他适量活动。</div>
+        </div>
+        <div class="msg-row me">
+          <div class="msg-who">王先生</div>
+          <div class="msg-bub">帮我提醒奶奶起来走走，同时把客厅灯调亮</div>
+        </div>
+        <div class="msg-row ai">
+          <div class="msg-who vi">AIBrain</div>
+          <div class="msg-bub">✅ 已完成：<br>① 客厅音箱已播报「奶奶，您已坐了很久了，起来活动一下吧～」<br>② 客厅主灯从 80% 调至 100% 暖白<br><br>事件已写入今日关怀日志，记忆档案同步更新。</div>
+        </div>
+        <div class="msg-row me">
+          <div class="msg-who">王先生</div>
+          <div class="msg-bub">每周五下午2点开始，每隔30分钟提醒奶奶喝水或起身活动</div>
+        </div>
+        <div class="msg-row ai">
+          <div class="msg-who vi">AIBrain</div>
+          <div class="msg-bub">🔮 规则已生成，请确认：<br><br><span style="color:var(--pulse)">触发：</span>每周五 14:00–18:00<br><span style="color:var(--pulse)">频率：</span>每 30 分钟<br><span style="color:var(--pulse)">动作：</span>客厅音箱语音提醒<br><br>是否启用此规则？</div>
+        </div>
+        <div class="msg-confirm">
+          <div class="btn btn-pulse" style="font-size:11px" onclick="showToast('✅','规则已启用')">✓ 启用</div>
+          <div class="btn btn-ghost" style="font-size:11px">修改</div>
+        </div>
+      </div>
+
+      <!-- AI compose -->
+      <div class="ai-compose">
+        <div class="ai-mic"><svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3zM19 10v2a7 7 0 01-14 0v-2M12 19v4m-4 0h8"/></svg></div>
+        <textarea class="ai-textarea" id="ai-in" placeholder="输入指令、查询、或一句话创建规则…" rows="1"></textarea>
+        <div class="ai-send" onclick="sendMsg()"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+      </div>
+    </div><!-- /s-ai -->
+
+
+    <!-- ══════════════════════════════
+         S-DEVICES
+    ══════════════════════════════ -->
+    <div class="screen" id="s-devices">
+      <div class="page-hd"><div class="back-btn" onclick="back()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-hd-info"><div class="page-hd-title">设备控制</div><div class="page-hd-sub">38 在线 · 6 房间</div></div><div style="width:34px"></div></div>
+      <div style="display:flex;gap:6px;padding:10px 16px;flex-wrap:wrap">
+        <div class="btn btn-pulse" style="font-size:10px;padding:5px 10px">全部</div>
+        <div class="btn btn-ghost" style="font-size:10px;padding:5px 10px">客厅</div>
+        <div class="btn btn-ghost" style="font-size:10px;padding:5px 10px">卧室</div>
+        <div class="btn btn-ghost" style="font-size:10px;padding:5px 10px">厨房</div>
+        <div class="btn btn-ghost" style="font-size:10px;padding:5px 10px">安防</div>
+      </div>
+      <div class="card" style="margin:0 16px 10px">
+        <div style="font-family:var(--f-data);font-size:9px;color:var(--wire3);padding:10px 14px 4px;letter-spacing:1.5px">客厅</div>
+        <div class="file-row" onclick="go('s-dev-detail')"><div class="file-ico">💡</div><div style="flex:1"><div class="file-name">客厅主灯</div><div class="file-meta">80% · 暖白 · Zigbee</div></div><button class="tog on" onclick="event.stopPropagation()"></button></div>
+        <div class="file-row"><div class="file-ico">❄️</div><div style="flex:1"><div class="file-name">空调</div><div class="file-meta">26°C 制冷 · Wi-Fi</div></div><button class="tog on" onclick="event.stopPropagation()"></button></div>
+        <div class="file-row"><div class="file-ico">🪟</div><div style="flex:1"><div class="file-name">窗帘</div><div class="file-meta">已关闭 · Matter</div></div><button class="tog off" onclick="event.stopPropagation()"></button></div>
+        <div class="file-row" style="border-bottom:none"><div class="file-ico" style="border-color:rgba(255,192,64,.3)">🌬️</div><div style="flex:1"><div class="file-name">空气净化器</div><div class="file-meta" style="color:var(--sun)">滤网预警 · 需更换</div></div><button class="tog on" onclick="event.stopPropagation()"></button></div>
+      </div>
+      <div class="card" style="margin:0 16px 14px">
+        <div style="font-family:var(--f-data);font-size:9px;color:var(--wire3);padding:10px 14px 4px;letter-spacing:1.5px">安防</div>
+        <div class="file-row"><div class="file-ico">🔒</div><div style="flex:1"><div class="file-name">入户门锁</div><div class="file-meta" style="color:var(--pulse)">已锁定 · Matter</div></div><button class="tog on" onclick="event.stopPropagation()"></button></div>
+        <div class="file-row" style="border-bottom:none"><div class="file-ico">🔔</div><div style="flex:1"><div class="file-name">安防警报</div><div class="file-meta">布防中</div></div><button class="tog on" onclick="event.stopPropagation()"></button></div>
+      </div>
+    </div>
+
+
+    <!-- ══ DEV DETAIL ══ -->
+    <div class="screen" id="s-dev-detail">
+      <div class="page-hd"><div class="back-btn" onclick="back()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-hd-info"><div class="page-hd-title">客厅主灯</div><div class="page-hd-sub">在线 · Zigbee</div></div><div style="width:34px"></div></div>
+      <div style="padding:22px 18px;background:var(--ink1);border-bottom:1px solid var(--wire);text-align:center">
+        <div style="font-size:52px;margin-bottom:10px">💡</div>
+        <div style="font-family:var(--f-data);font-size:26px;font-weight:500;color:var(--pulse)">80%</div>
+        <div style="font-family:var(--f-data);font-size:10px;color:var(--wire3);margin-top:3px">暖白 · 2700K · 已开启</div>
+      </div>
+      <div style="padding:16px 18px">
+        <div style="margin-bottom:14px"><div style="font-family:var(--f-data);font-size:9px;color:var(--wire3);margin-bottom:8px;letter-spacing:1px">亮度调节</div><div style="background:var(--wire);height:5px;border-radius:3px;overflow:hidden"><div style="width:80%;height:100%;background:var(--pulse2);border-radius:3px"></div></div></div>
+        <div style="margin-bottom:14px"><div style="font-family:var(--f-data);font-size:9px;color:var(--wire3);margin-bottom:8px;letter-spacing:1px">色温</div><div style="display:flex;gap:7px"><div class="btn btn-pulse" style="font-size:10px;padding:5px 10px">暖白2700K</div><div class="btn btn-ghost" style="font-size:10px;padding:5px 10px">自然白</div><div class="btn btn-ghost" style="font-size:10px;padding:5px 10px">冷白</div></div></div>
+        <div class="metrics-grid"><div class="metric"><div class="metric-val">47天</div><div class="metric-key">使用天数</div></div><div class="metric"><div class="metric-val">3.2W</div><div class="metric-key">当前功耗</div></div><div class="metric"><div class="metric-val">Zigbee</div><div class="metric-key">协议</div></div></div>
+      </div>
+      <div style="display:flex;gap:8px;padding:0 16px 16px">
+        <div class="btn btn-pulse" onclick="showToast('✅','已加入场景')">加入场景</div>
+        <div class="btn btn-ghost" onclick="go('s-ai')">AI控制</div>
+        <div class="btn btn-fire" onclick="showToast('💡','设备已关闭')">关闭</div>
+      </div>
+    </div>
+
+
+    <!-- ══ SCENES ══ -->
+    <div class="screen" id="s-scenes">
+      <div class="page-hd"><div class="back-btn" onclick="back()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-hd-info"><div class="page-hd-title">场景自动化</div><div class="page-hd-sub">12条启用</div></div><div style="width:34px"></div></div>
+      <div style="padding:10px 16px;display:grid;grid-template-columns:repeat(2,1fr);gap:9px">
+        <div style="background:rgba(0,229,200,.07);border:1.5px solid rgba(0,229,200,.35);border-radius:var(--r16);padding:16px;cursor:pointer;text-align:center" onclick="showToast('🏠','在家模式已激活')"><div style="font-size:28px;margin-bottom:7px">🏠</div><div style="font-family:var(--f-ui);font-size:12px;font-weight:600;color:var(--sky)">在家模式</div><div style="font-family:var(--f-data);font-size:9px;color:var(--pulse);margin-top:3px">运行中</div></div>
+        <div style="background:var(--ink2);border:1px solid var(--wire);border-radius:var(--r16);padding:16px;cursor:pointer;text-align:center" onclick="showToast('🌙','睡眠模式已启动')"><div style="font-size:28px;margin-bottom:7px">🌙</div><div style="font-family:var(--f-ui);font-size:12px;font-weight:600;color:var(--sky)">睡眠模式</div><div style="font-family:var(--f-data);font-size:9px;color:var(--wire3);margin-top:3px">23:30自动</div></div>
+        <div style="background:var(--ink2);border:1px solid var(--wire);border-radius:var(--r16);padding:16px;cursor:pointer;text-align:center" onclick="showToast('🚶','离家模式已启动')"><div style="font-size:28px;margin-bottom:7px">🚶</div><div style="font-family:var(--f-ui);font-size:12px;font-weight:600;color:var(--sky)">离家模式</div><div style="font-family:var(--f-data);font-size:9px;color:var(--wire3);margin-top:3px">手动触发</div></div>
+        <div style="background:var(--ink2);border:1px solid var(--wire);border-radius:var(--r16);padding:16px;cursor:pointer;text-align:center" onclick="showToast('🎬','观影模式已启动')"><div style="font-size:28px;margin-bottom:7px">🎬</div><div style="font-family:var(--f-ui);font-size:12px;font-weight:600;color:var(--sky)">观影模式</div><div style="font-family:var(--f-data);font-size:9px;color:var(--wire3);margin-top:3px">手动触发</div></div>
+        <div style="background:rgba(176,96,255,.06);border:1px dashed rgba(176,96,255,.3);border-radius:var(--r16);padding:16px;cursor:pointer;text-align:center" onclick="go('s-ai')"><div style="font-size:28px;margin-bottom:7px">✨</div><div style="font-family:var(--f-ui);font-size:12px;font-weight:600;color:var(--violet)">AI 创建场景</div><div style="font-family:var(--f-data);font-size:9px;color:var(--violet);margin-top:3px">自然语言 →</div></div>
+        <div style="background:var(--ink2);border:1px dashed var(--wire2);border-radius:var(--r16);padding:16px;cursor:pointer;text-align:center;opacity:.5"><div style="font-size:28px;margin-bottom:7px">➕</div><div style="font-family:var(--f-ui);font-size:12px;color:var(--wire3)">手动创建</div></div>
+      </div>
+    </div>
+
+
+    <!-- ══ SENSORS ══ -->
+    <div class="screen" id="s-sensors">
+      <div class="page-hd"><div class="back-btn" onclick="back()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-hd-info"><div class="page-hd-title">IoT 传感</div><div class="page-hd-sub">47 传感器在线</div></div><div style="width:34px"></div></div>
+      <div style="padding:10px 16px;display:flex;flex-direction:column;gap:8px">
+        <div class="card"><div style="font-family:var(--f-data);font-size:9px;color:var(--wire3);padding:10px 14px 4px;letter-spacing:1.5px">环境传感</div>
+          <div class="file-row"><div class="file-ico">🌡️</div><div style="flex:1"><div class="file-name">室内温度</div><div class="file-meta">客厅 · Zigbee</div></div><div class="file-size" style="color:var(--pulse)">24.2°C</div></div>
+          <div class="file-row"><div class="file-ico">💧</div><div style="flex:1"><div class="file-name">湿度</div><div class="file-meta">客厅 · Zigbee</div></div><div class="file-size" style="color:var(--sky2)">58%</div></div>
+          <div class="file-row"><div class="file-ico">🌫️</div><div style="flex:1"><div class="file-name">CO₂浓度</div><div class="file-meta">客厅 · Zigbee</div></div><div class="file-size" style="color:var(--pulse)">412ppm</div></div>
+          <div class="file-row" style="border-bottom:none"><div class="file-ico">✨</div><div style="flex:1"><div class="file-name">PM2.5</div><div class="file-meta">客厅 · Zigbee</div></div><div class="file-size" style="color:var(--pulse)">8μg</div></div>
+        </div>
+        <div class="card"><div style="font-family:var(--f-data);font-size:9px;color:var(--wire3);padding:10px 14px 4px;letter-spacing:1.5px">健康传感</div>
+          <div class="file-row"><div class="file-ico" style="border-color:rgba(255,192,64,.3)">❤️</div><div style="flex:1"><div class="file-name">爸爸血压</div><div class="file-meta">手环 · BLE</div></div><div class="file-size" style="color:var(--sun)">142/91</div></div>
+          <div class="file-row"><div class="file-ico">💓</div><div style="flex:1"><div class="file-name">奶奶心率</div><div class="file-meta">手环 · BLE</div></div><div class="file-size" style="color:var(--pulse)">72bpm</div></div>
+          <div class="file-row" style="border-bottom:none"><div class="file-ico">🫁</div><div style="flex:1"><div class="file-name">宝宝SpO₂</div><div class="file-meta">手环 · BLE</div></div><div class="file-size" style="color:var(--violet)">97%</div></div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ══ PROFILE ══ -->
+    <div class="screen" id="s-profile">
+      <div class="page-hd"><div class="back-btn" onclick="back()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-hd-info"><div class="page-hd-title">我的</div><div class="page-hd-sub">设置与账号</div></div><div style="width:34px"></div></div>
+      <div style="padding:18px;background:var(--ink1);border-bottom:1px solid var(--wire);display:flex;align-items:center;gap:14px">
+        <div style="width:54px;height:54px;border-radius:50%;background:rgba(0,229,200,.12);border:2px solid rgba(0,229,200,.35);display:flex;align-items:center;justify-content:center;font-family:var(--f-ui);font-size:20px;font-weight:700;color:var(--pulse)">王</div>
+        <div><div style="font-family:var(--f-ui);font-size:16px;font-weight:700;color:var(--sky)">王建国</div><div style="font-family:var(--f-data);font-size:10px;color:var(--wire3);margin-top:3px">主账号 · HOME AIBRAIN v2.1</div><div style="display:flex;gap:5px;margin-top:7px"><span class="chip chip-pulse" style="font-size:9px">管理员</span><span class="chip chip-pulse" style="font-size:9px">运行第47天</span></div></div>
+      </div>
+      <div style="padding:10px 16px 0">
+        <div style="font-family:var(--f-data);font-size:9px;color:var(--wire3);letter-spacing:1.5px;margin-bottom:7px">家庭管理</div>
+        <div class="card" style="margin-bottom:10px">
+          <div class="set-row" onclick="go('s-members')"><div class="set-ico" style="background:rgba(0,229,200,.1)">👨‍👩‍👧‍👦</div><div class="set-body"><div class="set-label">家庭成员</div><div class="set-sub">4位 · 3位在家</div></div><svg class="set-arr" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+          <div class="set-row" onclick="go('s-rules')"><div class="set-ico" style="background:rgba(176,96,255,.1)">🤖</div><div class="set-body"><div class="set-label">AI 规则管理</div><div class="set-sub">12条启用 · 2条待确认</div></div><svg class="set-arr" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+        <div style="font-family:var(--f-data);font-size:9px;color:var(--wire3);letter-spacing:1.5px;margin-bottom:7px">AI 与隐私</div>
+        <div class="card" style="margin-bottom:10px">
+          <div class="set-row"><div class="set-ico" style="background:rgba(0,229,200,.1)">🧠</div><div class="set-body"><div class="set-label">本地AI记忆</div><div class="set-sub">NPU推理 · 离线可用</div></div><button class="tog on" onclick="event.stopPropagation()"></button></div>
+          <div class="set-row"><div class="set-ico" style="background:rgba(0,229,200,.1)">🔐</div><div class="set-body"><div class="set-label">数据隐私</div><div class="set-sub">AES-256本地加密</div></div><svg class="set-arr" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+          <div class="set-row"><div class="set-ico" style="background:rgba(176,96,255,.1)">📡</div><div class="set-body"><div class="set-label">云端增强</div><div class="set-sub">联网时接入大模型能力</div></div><button class="tog on" onclick="event.stopPropagation()"></button></div>
+        </div>
+        <div style="font-family:var(--f-data);font-size:9px;color:var(--wire3);letter-spacing:1.5px;margin-bottom:7px">通知</div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="set-row"><div class="set-ico" style="background:rgba(255,69,96,.1)">🚨</div><div class="set-body"><div class="set-label">紧急关怀通知</div></div><button class="tog on" onclick="event.stopPropagation()"></button></div>
+          <div class="set-row"><div class="set-ico" style="background:rgba(255,192,64,.1)">⚠️</div><div class="set-body"><div class="set-label">健康警告推送</div></div><button class="tog on" onclick="event.stopPropagation()"></button></div>
+          <div class="set-row"><div class="set-ico" style="background:var(--ink4)">📋</div><div class="set-body"><div class="set-label">每日家庭报告</div><div class="set-sub">每晚21:00推送</div></div><button class="tog on" onclick="event.stopPropagation()"></button></div>
+        </div>
+        <div style="background:var(--ink2);border:1px solid var(--wire);border-radius:var(--r12);padding:13px;display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+          <div><div style="font-family:var(--f-data);font-size:11px;color:var(--pulse)">AIBrain OS v2.1.0</div><div style="font-family:var(--f-data);font-size:9px;color:var(--wire3);margin-top:2px">NPU固件 v1.8.3 · 已是最新</div></div>
+          <span class="chip chip-pulse" style="font-size:9px">最新版</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /screen-wrap -->
+
+  <!-- BOTTOM NAV -->
+  <div class="bnav">
+    <div class="bnav-item on" id="n-home" onclick="go('s-home');navOn('n-home')">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>首页</span>
+    </div>
+    <div class="bnav-item" id="n-care" onclick="go('s-care');navOn('n-care')" style="position:relative">
+      <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+      <span>关怀</span>
+      <div class="bnav-badge"></div>
+    </div>
+    <div class="bnav-item" id="n-ai" onclick="go('s-ai');navOn('n-ai')">
+      <svg viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636-.707.707M21 12h-1M4 12H3m3.343-5.657-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386z"/></svg>
+      <span>AI助手</span>
+    </div>
+    <div class="bnav-item" id="n-dev" onclick="go('s-devices');navOn('n-dev')">
+      <svg viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      <span>设备</span>
+    </div>
+    <div class="bnav-item" id="n-me" onclick="go('s-profile');navOn('n-me')">
+      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>我的</span>
+    </div>
+  </div>
+  <div class="hbar"><div class="hbar-pill"></div></div>
+</div>
+
+<script>
+// ─── NAV ───
+let hist=['s-home'],cur='s-home';
+function go(id){
+  if(id===cur)return;
+  const prev=document.getElementById(cur);
+  const next=document.getElementById(id);
+  if(!next)return;
+  prev.classList.remove('active');prev.classList.add('behind');
+  next.classList.add('active');next.scrollTop=0;
+  cur=id;hist.push(id);
+}
+function back(){
+  if(hist.length<=1)return;
+  hist.pop();
+  const pid=hist[hist.length-1];
+  const c=document.getElementById(cur);
+  const p=document.getElementById(pid);
+  c.classList.remove('active','behind');
+  if(p){p.classList.remove('behind');p.classList.add('active');}
+  cur=pid;
+}
+function navOn(id){
+  document.querySelectorAll('.bnav-item').forEach(e=>e.classList.remove('on'));
+  const el=document.getElementById(id);if(el)el.classList.add('on');
+}
+
+// ─── CLOCK ───
+function tick(){
+  const n=new Date();
+  document.getElementById('clk').textContent=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
+  const d=['周日','周一','周二','周三','周四','周五','周六'];
+  document.getElementById('datestr').textContent=n.getFullYear()+'年'+(n.getMonth()+1)+'月'+n.getDate()+'日 '+d[n.getDay()];
+}
+tick();setInterval(tick,15000);
+
+// ─── TOAST ───
+let tt;
+function showToast(icon,msg){
+  document.getElementById('t-icon').textContent=icon;
+  document.getElementById('t-body').innerHTML=msg;
+  document.getElementById('toast').classList.add('show');
+  clearTimeout(tt);tt=setTimeout(hideToast,3200);
+}
+function hideToast(){document.getElementById('toast').classList.remove('show');}
+
+// ─── AI ───
+function fillAI(txt){
+  const el=document.getElementById('ai-in');
+  if(el){el.value=txt;el.focus();}
+  go('s-ai');navOn('n-ai');
+}
+function sendMsg(){
+  const el=document.getElementById('ai-in');
+  if(el&&el.value.trim()){showToast('🤖','AI正在处理：'+el.value.substring(0,18)+'...');el.value='';}
+}
+
+// ─── VIDEO ───
+function seekVid(e){
+  const b=e.currentTarget;const p=document.getElementById('vp');
+  if(p)p.style.width=Math.round(e.offsetX/b.offsetWidth*100)+'%';
+}
+
+// init toast
+setTimeout(()=>showToast('⚠️','<strong style="color:var(--sun)">奶奶久坐预警</strong> · AI检测已静坐 87 分钟'),1000);
+</script>
+</body>
+</html>

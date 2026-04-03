@@ -1,0 +1,628 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080d14;--bg1:#0e1620;--bg2:#131d2a;--bg3:#1a2535;
+  --b:#1e3048;--b2:#2a4060;
+  --t:#e8f0f8;--t2:#7a9bbf;--t3:#3d5a78;
+  --cy:#00d4ff;--cy2:#0099cc;--cy3:#004466;
+  --gn:#00e5a0;--gn2:#00a872;--gn3:#003d29;
+  --am:#ffb344;--am2:#cc7a00;--am3:#3d2400;
+  --rd:#ff4d6a;--rd2:#cc1f3a;--rd3:#3d0010;
+  --pu:#a855f7;--pu2:#7c3aed;--pu3:#2d0d4a;
+  font-family:'DM Sans',sans-serif;color:var(--t);background:var(--bg);
+}
+.pages-wrap{background:var(--bg);padding:0}
+
+/* PAGE LAYOUT */
+.page{background:var(--bg);min-height:auto;border-bottom:3px solid var(--bg2)}
+.page-topbar{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:44px;background:var(--bg1);border-bottom:1px solid var(--b)}
+.page-breadcrumb{display:flex;align-items:center;gap:6px;font-size:12px}
+.page-breadcrumb-home{color:var(--t3);font-family:'Space Mono',monospace}
+.page-breadcrumb-sep{color:var(--t3)}
+.page-breadcrumb-cur{color:var(--cy);font-family:'Space Mono',monospace}
+.page-actions{display:flex;gap:8px;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;font-size:12px;cursor:pointer;transition:all .2s;border:1px solid;font-family:'DM Sans',sans-serif}
+.btn-ghost{background:transparent;border-color:var(--b2);color:var(--t2)}
+.btn-ghost:hover{border-color:var(--cy2);color:var(--cy)}
+.btn-primary{background:rgba(0,212,255,.1);border-color:rgba(0,212,255,.3);color:var(--cy)}
+.page-content{padding:20px 24px;display:flex;flex-direction:column;gap:16px}
+
+/* PANEL */
+.panel{background:var(--bg1);border:1px solid var(--b);border-radius:14px;overflow:hidden}
+.ph{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--b);background:var(--bg2)}
+.pt{font-size:13px;font-weight:500;color:var(--t);display:flex;align-items:center;gap:8px}
+.pb{font-size:10px;padding:2px 8px;border-radius:10px;font-family:'Space Mono',monospace}
+.pb-cy{background:rgba(0,212,255,.08);color:var(--cy);border:1px solid rgba(0,212,255,.18)}
+.pb-gn{background:rgba(0,229,160,.08);color:var(--gn);border:1px solid rgba(0,229,160,.18)}
+.pb-am{background:rgba(255,179,68,.08);color:var(--am);border:1px solid rgba(255,179,68,.2)}
+.pb-rd{background:rgba(255,77,106,.08);color:var(--rd);border:1px solid rgba(255,77,106,.2)}
+.pb-pu{background:rgba(168,85,247,.08);color:var(--pu);border:1px solid rgba(168,85,247,.2)}
+
+/* GRIDS */
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.g5{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+
+/* STAT CARD */
+.sc{background:var(--bg2);border:1px solid var(--b);border-radius:12px;padding:14px;transition:border-color .2s}
+.sc:hover{border-color:var(--b2)}
+.sv{font-family:'Space Mono',monospace;font-size:24px;font-weight:700;color:var(--cy);line-height:1}
+.sv.gn{color:var(--gn)} .sv.am{color:var(--am)} .sv.rd{color:var(--rd)} .sv.pu{color:var(--pu)}
+.sl{font-size:10px;color:var(--t3);margin-top:5px;text-transform:uppercase;letter-spacing:1px}
+.sd{font-size:11px;margin-top:3px;font-family:'Space Mono',monospace}
+
+/* CAM GRID */
+.cam-grid-main{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:14px}
+.cam-big{grid-column:1/3;grid-row:1/3}
+.cam-feed{border-radius:10px;overflow:hidden;position:relative;background:var(--bg3);border:1px solid var(--b);cursor:pointer;transition:border-color .2s}
+.cam-feed.big{aspect-ratio:16/9}
+.cam-feed.sm{aspect-ratio:16/9}
+.cam-feed:hover{border-color:var(--b2)}
+.cam-feed.warn{border-color:rgba(255,179,68,.5)}
+.cam-feed.crit{border-color:rgba(255,77,106,.5)}
+.cam-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px}
+.cam-ov{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;padding:8px}
+.cam-top-row{display:flex;justify-content:space-between;align-items:flex-start}
+.ct{font-size:10px;background:rgba(8,13,20,.7);color:var(--t2);padding:2px 7px;border-radius:4px;font-family:'Space Mono',monospace}
+.crec{display:flex;align-items:center;gap:3px;font-size:10px;background:rgba(255,77,106,.2);color:var(--rd);padding:2px 7px;border-radius:4px;font-family:'Space Mono',monospace}
+.rdot{width:5px;height:5px;border-radius:50%;background:var(--rd);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.cai{font-size:10px;padding:2px 8px;border-radius:4px;border:1px solid;font-family:'Space Mono',monospace;width:fit-content}
+.cai.ok{background:rgba(0,229,160,.12);color:var(--gn);border-color:rgba(0,229,160,.25)}
+.cai.warn{background:rgba(255,179,68,.12);color:var(--am);border-color:rgba(255,179,68,.25)}
+.cai.info{background:rgba(0,212,255,.1);color:var(--cy);border-color:rgba(0,212,255,.2)}
+.cai.pu{background:rgba(168,85,247,.1);color:var(--pu);border-color:rgba(168,85,247,.2)}
+.cai.rd{background:rgba(255,77,106,.1);color:var(--rd);border-color:rgba(255,77,106,.2)}
+
+/* IOT TABLE */
+.iot-table{width:100%;border-collapse:collapse}
+.iot-table th{font-size:11px;color:var(--t3);font-family:'Space Mono',monospace;font-weight:400;padding:8px 16px;text-align:left;border-bottom:1px solid var(--b);background:var(--bg2);letter-spacing:1px}
+.iot-table td{font-size:12px;padding:10px 16px;border-bottom:1px solid var(--b);vertical-align:middle}
+.iot-table tr:hover td{background:rgba(30,48,72,.3)}
+.iot-table tr:last-child td{border-bottom:none}
+.status-dot-inline{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:6px;vertical-align:middle}
+.val-chip{font-family:'Space Mono',monospace;font-size:12px;font-weight:700}
+.trend-up{color:var(--am);font-size:11px}
+.trend-ok{color:var(--gn);font-size:11px}
+.location-tag{font-size:11px;color:var(--t3);background:var(--bg2);padding:2px 8px;border-radius:5px;font-family:'Space Mono',monospace}
+.protocol-tag{font-size:10px;padding:2px 7px;border-radius:5px;font-family:'Space Mono',monospace}
+.pt-zb{background:var(--cy3);color:var(--cy);border:1px solid rgba(0,212,255,.2)}
+.pt-wf{background:var(--gn3);color:var(--gn);border:1px solid rgba(0,229,160,.2)}
+.pt-bt{background:var(--pu3);color:var(--pu);border:1px solid rgba(168,85,247,.2)}
+.pt-mt{background:var(--am3);color:var(--am);border:1px solid rgba(255,179,68,.2)}
+
+/* SECURITY */
+.sec-map{background:var(--bg2);border-radius:12px;border:1px solid var(--b);padding:16px;position:relative;height:220px;overflow:hidden}
+.floor-plan{position:absolute;inset:20px;border:1px solid var(--b2);border-radius:4px}
+.room-box{position:absolute;background:rgba(30,48,72,.5);border:1px solid var(--b2);border-radius:4px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;cursor:pointer}
+.room-box:hover{background:rgba(42,64,96,.6)}
+.room-box.alert{border-color:rgba(255,179,68,.5);background:rgba(255,179,68,.06)}
+.room-name{font-size:10px;color:var(--t3);font-family:'Space Mono',monospace}
+.room-icon{font-size:14px}
+.sensor-dot-map{width:8px;height:8px;border-radius:50%;position:absolute}
+.sensor-dot-map.ok{background:var(--gn)}
+.sensor-dot-map.warn{background:var(--am);animation:pulse 2s infinite}
+.sec-event-list{padding:12px 16px;display:flex;flex-direction:column;gap:8px}
+.sec-event{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;background:var(--bg2);border:1px solid var(--b);transition:border-color .2s}
+.sec-event:hover{border-color:var(--b2)}
+.sec-event.warn{border-color:rgba(255,179,68,.2);background:rgba(255,179,68,.04)}
+.sec-event.ok{border-color:rgba(0,229,160,.15)}
+.sec-event-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.sec-event-body{flex:1}
+.sec-event-title{font-size:12px;font-weight:500;color:var(--t)}
+.sec-event-desc{font-size:11px;color:var(--t2);margin-top:1px}
+.sec-event-time{font-size:10px;color:var(--t3);font-family:'Space Mono',monospace}
+
+/* STORAGE */
+.storage-usage-bar{height:10px;border-radius:5px;background:var(--b);overflow:hidden;margin:10px 0;display:flex}
+.storage-seg{height:100%;transition:width .5s}
+.storage-legend{display:flex;flex-wrap:wrap;gap:12px;font-size:11px}
+.leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.file-list-item{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg2);border:1px solid var(--b);border-radius:8px;margin-bottom:6px;cursor:pointer;transition:border-color .2s}
+.file-list-item:hover{border-color:var(--b2)}
+.file-icon-box{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;background:var(--bg3);border:1px solid var(--b);flex-shrink:0}
+.file-name{font-size:12px;color:var(--t);font-weight:500}
+.file-meta{font-size:10px;color:var(--t3);font-family:'Space Mono',monospace;margin-top:2px}
+.file-size{font-size:11px;color:var(--t2);font-family:'Space Mono',monospace;margin-left:auto}
+
+/* ANALYSIS CHARTS */
+.chart-placeholder{background:var(--bg2);border-radius:10px;border:1px solid var(--b);padding:16px;position:relative}
+.chart-title-sm{font-size:11px;color:var(--t3);font-family:'Space Mono',monospace;margin-bottom:10px;letter-spacing:1px;text-transform:uppercase}
+.mini-line{width:100%;display:block}
+
+/* AUTOMATION */
+.rule-item{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--b);transition:background .2s}
+.rule-item:last-child{border-bottom:none}
+.rule-item:hover{background:var(--bg2)}
+.rule-num{width:24px;height:24px;border-radius:6px;background:var(--bg3);border:1px solid var(--b);display:flex;align-items:center;justify-content:center;font-size:10px;font-family:'Space Mono',monospace;color:var(--t3);flex-shrink:0}
+.rule-body{flex:1}
+.rule-name{font-size:13px;font-weight:500;color:var(--t);margin-bottom:3px}
+.rule-desc{font-size:11px;color:var(--t2)}
+.rule-tags{display:flex;gap:4px;margin-top:5px}
+.rtag{font-size:10px;padding:2px 7px;border-radius:5px;font-family:'Space Mono',monospace}
+.rtag.cy{background:var(--cy3);color:var(--cy)}
+.rtag.gn{background:var(--gn3);color:var(--gn)}
+.rtag.am{background:var(--am3);color:var(--am)}
+.rule-toggle{width:36px;height:20px;border-radius:10px;border:none;cursor:pointer;position:relative;flex-shrink:0}
+.rule-toggle.on{background:var(--cy2)}
+.rule-toggle.off{background:var(--b2)}
+.rule-toggle::after{content:'';position:absolute;top:3px;width:14px;height:14px;border-radius:50%;background:#fff;transition:all .3s}
+.rule-toggle.on::after{left:19px}
+.rule-toggle.off::after{left:3px}
+.rule-stat{font-size:11px;color:var(--t3);font-family:'Space Mono',monospace;width:70px;text-align:right;flex-shrink:0}
+
+/* PAGE DIVIDER */
+.pdiv{display:flex;align-items:center;gap:12px;padding:16px 24px;background:var(--bg2);border-top:3px solid var(--bg);border-bottom:1px solid var(--b)}
+.pdiv-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;border:1px solid}
+.pdiv-title{font-size:14px;font-weight:500;color:var(--t)}
+.pdiv-sub{font-size:11px;color:var(--t3);font-family:'Space Mono',monospace;margin-top:1px}
+
+/* HEALTH MEMBER PANEL */
+.health-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:14px 16px}
+.health-member-card{background:var(--bg2);border:1px solid var(--b);border-radius:12px;padding:12px;cursor:pointer;transition:border-color .2s}
+.health-member-card:hover{border-color:var(--b2)}
+.health-member-card.alert{border-color:rgba(255,179,68,.3)}
+.hm-top{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.hm-av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0}
+.hm-name{font-size:12px;font-weight:500;color:var(--t)}
+.hm-role{font-size:10px;color:var(--t3)}
+.hm-metrics{display:flex;flex-direction:column;gap:5px}
+.hm-metric{display:flex;justify-content:space-between;align-items:center}
+.hm-metric-key{font-size:10px;color:var(--t3)}
+.hm-metric-val{font-size:11px;font-family:'Space Mono',monospace;font-weight:700}
+
+/* SECTION LABEL */
+.section-lbl{font-size:10px;color:var(--t3);letter-spacing:2px;text-transform:uppercase;padding:12px 16px 6px;font-family:'Space Mono',monospace}
+</style>
+
+<div class="pages-wrap">
+
+  <!-- ===== PAGE: 摄像监控 ===== -->
+  <div class="pdiv">
+    <div class="pdiv-icon" style="background:rgba(0,229,160,.08);border-color:rgba(0,229,160,.25)">
+      <svg width="16" height="16" fill="none" stroke="#00e5a0" stroke-width="1.5" viewBox="0 0 24 24"><path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+    </div>
+    <div><div class="pdiv-title">摄像监控 · 视觉感知中心</div><div class="pdiv-sub">CAMERA &amp; VISION · 8 路 AI 实时分析</div></div>
+    <div style="margin-left:auto;display:flex;gap:8px">
+      <span class="pb pb-gn">8 路在线</span>
+      <span class="pb pb-rd">1 项预警</span>
+    </div>
+  </div>
+  <div class="page">
+    <div class="page-content">
+      <div class="g4">
+        <div class="sc"><div class="sv gn">8</div><div class="sl">摄像在线</div><div class="sd" style="color:var(--gn)">全部正常</div></div>
+        <div class="sc"><div class="sv am">1</div><div class="sl">AI 预警</div><div class="sd" style="color:var(--am)">客厅久坐</div></div>
+        <div class="sc"><div class="sv">30<span style="font-size:14px">天</span></div><div class="sl">录像保留</div><div class="sd" style="color:var(--t3)">循环覆盖</div></div>
+        <div class="sc"><div class="sv">4.2<span style="font-size:14px">K</span></div><div class="sl">分辨率</div><div class="sd" style="color:var(--t3)">主摄像头</div></div>
+      </div>
+      <div class="panel">
+        <div class="ph">
+          <div class="pt">
+            <svg width="16" height="16" fill="none" stroke="#00e5a0" stroke-width="1.5" viewBox="0 0 24 24"><path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+            实时画面 · AI 叠加分析
+          </div>
+          <div style="display:flex;gap:8px">
+            <span class="pb pb-cy">NPU 推理中</span>
+            <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px">全屏</button>
+          </div>
+        </div>
+        <div class="cam-grid-main">
+          <!-- BIG CAM -->
+          <div class="cam-feed big cam-big warn" style="aspect-ratio:auto;min-height:180px">
+            <div class="cam-ph"><div style="font-size:36px">🛋️</div><div style="font-size:11px;color:var(--t3);font-family:'Space Mono',monospace">客厅主摄像</div></div>
+            <div class="cam-ov">
+              <div class="cam-top-row">
+                <span class="ct">CAM-01 · 客厅</span>
+                <span class="crec"><span class="rdot"></span>REC 14:32:17</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <div style="display:flex;gap:4px;flex-wrap:wrap">
+                  <span class="cai warn">⚠ 姿态识别: 久坐 87min</span>
+                  <span class="cai info">人员: 奶奶 · 置信 94%</span>
+                </div>
+                <div style="font-size:9px;color:var(--t3);font-family:'Space Mono',monospace">骨骼关键点检测 · VisionLM · 推理延迟 18ms</div>
+              </div>
+            </div>
+          </div>
+          <!-- SMALL CAMS -->
+          <div class="cam-feed sm">
+            <div class="cam-ph"><div style="font-size:22px">🚪</div><div style="font-size:10px;color:var(--t3);font-family:'Space Mono',monospace">入户门口</div></div>
+            <div class="cam-ov"><div class="cam-top-row"><span class="ct">CAM-02</span><span class="crec"><span class="rdot"></span>REC</span></div><div><span class="cai ok">无异常 · 空间空置</span></div></div>
+          </div>
+          <div class="cam-feed sm">
+            <div class="cam-ph"><div style="font-size:22px">🍳</div><div style="font-size:10px;color:var(--t3);font-family:'Space Mono',monospace">厨房</div></div>
+            <div class="cam-ov"><div class="cam-top-row"><span class="ct">CAM-03</span><span class="crec"><span class="rdot"></span>REC</span></div><div><span class="cai ok">妈妈 · 正常站立</span></div></div>
+          </div>
+          <div class="cam-feed sm">
+            <div class="cam-ph"><div style="font-size:22px">🛏️</div><div style="font-size:10px;color:var(--t3);font-family:'Space Mono',monospace">主卧</div></div>
+            <div class="cam-ov"><div class="cam-top-row"><span class="ct">CAM-04</span></div><div><span class="cai pu">无人 · 隐私保护</span></div></div>
+          </div>
+          <div class="cam-feed sm">
+            <div class="cam-ph"><div style="font-size:22px">👶</div><div style="font-size:10px;color:var(--t3);font-family:'Space Mono',monospace">儿童房</div></div>
+            <div class="cam-ov"><div class="cam-top-row"><span class="ct">CAM-05</span><span class="crec"><span class="rdot"></span>REC</span></div><div><span class="cai pu">宝宝 · 活跃玩耍</span></div></div>
+          </div>
+          <div class="cam-feed sm">
+            <div class="cam-ph"><div style="font-size:22px">🌿</div><div style="font-size:10px;color:var(--t3);font-family:'Space Mono',monospace">阳台</div></div>
+            <div class="cam-ov"><div class="cam-top-row"><span class="ct">CAM-06</span></div><div><span class="cai ok">无异常</span></div></div>
+          </div>
+          <div class="cam-feed sm">
+            <div class="cam-ph"><div style="font-size:22px">🚗</div><div style="font-size:10px;color:var(--t3);font-family:'Space Mono',monospace">车库</div></div>
+            <div class="cam-ov"><div class="cam-top-row"><span class="ct">CAM-07</span></div><div><span class="cai ok">车辆在位</span></div></div>
+          </div>
+          <div class="cam-feed sm">
+            <div class="cam-ph"><div style="font-size:22px">📦</div><div style="font-size:10px;color:var(--t3);font-family:'Space Mono',monospace">储物间</div></div>
+            <div class="cam-ov"><div class="cam-top-row"><span class="ct">CAM-08</span></div><div><span class="cai ok">无人</span></div></div>
+          </div>
+        </div>
+      </div>
+      <!-- VISION AI LOG -->
+      <div class="panel">
+        <div class="ph"><div class="pt"><svg width="16" height="16" fill="none" stroke="#a855f7" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>视觉 AI 分析日志</div><span class="pb pb-pu">今日 24 次事件</span></div>
+        <table class="iot-table">
+          <tr><th>时间</th><th>摄像头</th><th>识别内容</th><th>置信度</th><th>模型</th><th>动作</th></tr>
+          <tr><td style="font-family:'Space Mono',monospace;color:var(--t3)">14:32</td><td><span class="location-tag">CAM-01 客厅</span></td><td style="color:var(--am)">奶奶久坐 87min · 姿态异常</td><td style="color:var(--am);font-family:'Space Mono',monospace">94%</td><td><span class="protocol-tag pt-zb">VisionLM</span></td><td><span style="color:var(--cy);font-size:11px;cursor:pointer">触发关怀提醒</span></td></tr>
+          <tr><td style="font-family:'Space Mono',monospace;color:var(--t3)">13:58</td><td><span class="location-tag">CAM-05 儿童</span></td><td>宝宝午休结束 · 起床活动</td><td style="color:var(--gn);font-family:'Space Mono',monospace">97%</td><td><span class="protocol-tag pt-zb">VisionLM</span></td><td><span style="color:var(--gn);font-size:11px">记入档案</span></td></tr>
+          <tr><td style="font-family:'Space Mono',monospace;color:var(--t3)">13:35</td><td><span class="location-tag">CAM-02 门口</span></td><td>妈妈回家 · 人脸识别确认</td><td style="color:var(--gn);font-family:'Space Mono',monospace">99%</td><td><span class="protocol-tag pt-wf">FaceLM</span></td><td><span style="color:var(--cy);font-size:11px">场景联动</span></td></tr>
+          <tr><td style="font-family:'Space Mono',monospace;color:var(--t3)">07:02</td><td><span class="location-tag">CAM-01 客厅</span></td><td>奶奶起床 · 坐立转换检测</td><td style="color:var(--gn);font-family:'Space Mono',monospace">88%</td><td><span class="protocol-tag pt-zb">VisionLM</span></td><td><span style="color:var(--gn);font-size:11px">记入档案</span></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PAGE: IoT 传感 ===== -->
+  <div class="pdiv">
+    <div class="pdiv-icon" style="background:rgba(0,212,255,.08);border-color:rgba(0,212,255,.25)">
+      <svg width="16" height="16" fill="none" stroke="#00d4ff" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg>
+    </div>
+    <div><div class="pdiv-title">IoT 传感 · 全屋数据中心</div><div class="pdiv-sub">IOT SENSOR HUB · 47 传感器在线</div></div>
+    <div style="margin-left:auto"><span class="pb pb-cy">全部在线</span></div>
+  </div>
+  <div class="page">
+    <div class="page-content">
+      <div class="g5">
+        <div class="sc"><div class="sv">24.2<span style="font-size:14px">°C</span></div><div class="sl">室内温度</div><div class="sd" style="color:var(--gn)">↑ 舒适范围</div></div>
+        <div class="sc"><div class="sv">58<span style="font-size:14px">%</span></div><div class="sl">湿度</div><div class="sd" style="color:var(--gn)">↑ 正常</div></div>
+        <div class="sc"><div class="sv gn">412<span style="font-size:14px">ppm</span></div><div class="sl">CO₂</div><div class="sd" style="color:var(--gn)">优良</div></div>
+        <div class="sc"><div class="sv am">142<span style="font-size:14px">/91</span></div><div class="sl">爸爸血压</div><div class="sd" style="color:var(--am)">↑ 偏高</div></div>
+        <div class="sc"><div class="sv">72<span style="font-size:14px">bpm</span></div><div class="sl">奶奶心率</div><div class="sd" style="color:var(--gn)">正常</div></div>
+      </div>
+      <div class="panel">
+        <div class="ph"><div class="pt"><svg width="16" height="16" fill="none" stroke="#00d4ff" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg>传感器总览</div><span class="pb pb-cy">47 在线 · 0 离线</span></div>
+        <table class="iot-table">
+          <tr><th>传感器</th><th>位置</th><th>当前值</th><th>状态</th><th>协议</th><th>趋势</th><th>最后更新</th></tr>
+          <tr><td style="color:var(--t);font-weight:500">室内温度传感</td><td><span class="location-tag">客厅</span></td><td><span class="val-chip" style="color:var(--cy)">24.2°C</span></td><td><span class="status-dot-inline" style="background:var(--gn)"></span><span style="color:var(--gn);font-size:11px">正常</span></td><td><span class="protocol-tag pt-zb">Zigbee</span></td><td class="trend-ok">→ 稳定</td><td style="font-size:11px;color:var(--t3);font-family:'Space Mono',monospace">14:32:05</td></tr>
+          <tr><td style="color:var(--t);font-weight:500">CO₂ 传感器</td><td><span class="location-tag">客厅</span></td><td><span class="val-chip" style="color:var(--gn)">412 ppm</span></td><td><span class="status-dot-inline" style="background:var(--gn)"></span><span style="color:var(--gn);font-size:11px">优良</span></td><td><span class="protocol-tag pt-zb">Zigbee</span></td><td class="trend-ok">↓ 下降</td><td style="font-size:11px;color:var(--t3);font-family:'Space Mono',monospace">14:31:58</td></tr>
+          <tr><td style="color:var(--t);font-weight:500">PM2.5 传感器</td><td><span class="location-tag">客厅</span></td><td><span class="val-chip" style="color:var(--gn)">8 μg/m³</span></td><td><span class="status-dot-inline" style="background:var(--gn)"></span><span style="color:var(--gn);font-size:11px">优良</span></td><td><span class="protocol-tag pt-zb">Zigbee</span></td><td class="trend-ok">→ 稳定</td><td style="font-size:11px;color:var(--t3);font-family:'Space Mono',monospace">14:32:01</td></tr>
+          <tr><td style="color:var(--t);font-weight:500">血压监测仪</td><td><span class="location-tag">书房 · 爸爸</span></td><td><span class="val-chip" style="color:var(--am)">142/91 mmHg</span></td><td><span class="status-dot-inline" style="background:var(--am)"></span><span style="color:var(--am);font-size:11px">偏高</span></td><td><span class="protocol-tag pt-bt">BLE</span></td><td class="trend-up">↑ 上升</td><td style="font-size:11px;color:var(--t3);font-family:'Space Mono',monospace">14:18:22</td></tr>
+          <tr><td style="color:var(--t);font-weight:500">心率手环</td><td><span class="location-tag">客厅 · 奶奶</span></td><td><span class="val-chip" style="color:var(--cy)">72 bpm</span></td><td><span class="status-dot-inline" style="background:var(--gn)"></span><span style="color:var(--gn);font-size:11px">正常</span></td><td><span class="protocol-tag pt-bt">BLE</span></td><td class="trend-ok">→ 稳定</td><td style="font-size:11px;color:var(--t3);font-family:'Space Mono',monospace">14:32:10</td></tr>
+          <tr><td style="color:var(--t);font-weight:500">SpO₂ 血氧</td><td><span class="location-tag">儿童房 · 宝宝</span></td><td><span class="val-chip" style="color:var(--pu)">97%</span></td><td><span class="status-dot-inline" style="background:var(--gn)"></span><span style="color:var(--gn);font-size:11px">正常</span></td><td><span class="protocol-tag pt-bt">BLE</span></td><td class="trend-ok">→ 稳定</td><td style="font-size:11px;color:var(--t3);font-family:'Space Mono',monospace">14:32:08</td></tr>
+          <tr><td style="color:var(--t);font-weight:500">燃气传感器</td><td><span class="location-tag">厨房</span></td><td><span class="val-chip" style="color:var(--gn)">0 ppm</span></td><td><span class="status-dot-inline" style="background:var(--gn)"></span><span style="color:var(--gn);font-size:11px">安全</span></td><td><span class="protocol-tag pt-zb">Zigbee</span></td><td class="trend-ok">→ 正常</td><td style="font-size:11px;color:var(--t3);font-family:'Space Mono',monospace">14:32:12</td></tr>
+          <tr><td style="color:var(--t);font-weight:500">烟雾探测器</td><td><span class="location-tag">厨房</span></td><td><span class="val-chip" style="color:var(--gn)">无烟雾</span></td><td><span class="status-dot-inline" style="background:var(--gn)"></span><span style="color:var(--gn);font-size:11px">安全</span></td><td><span class="protocol-tag pt-mt">Matter</span></td><td class="trend-ok">→ 正常</td><td style="font-size:11px;color:var(--t3);font-family:'Space Mono',monospace">14:32:15</td></tr>
+          <tr><td style="color:var(--t);font-weight:500">门窗磁感</td><td><span class="location-tag">入户门</span></td><td><span class="val-chip" style="color:var(--gn)">关闭</span></td><td><span class="status-dot-inline" style="background:var(--gn)"></span><span style="color:var(--gn);font-size:11px">正常</span></td><td><span class="protocol-tag pt-zb">Zigbee</span></td><td class="trend-ok">→ 锁定</td><td style="font-size:11px;color:var(--t3);font-family:'Space Mono',monospace">14:32:00</td></tr>
+        </table>
+      </div>
+      <!-- HEALTH MEMBERS -->
+      <div class="panel">
+        <div class="ph"><div class="pt"><svg width="16" height="16" fill="none" stroke="#ff4d6a" stroke-width="1.5" viewBox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>成员健康面板</div><span class="pb pb-am">1 项需关注</span></div>
+        <div class="health-grid">
+          <div class="health-member-card alert">
+            <div class="hm-top"><div class="hm-av" style="background:rgba(0,212,255,.12);color:var(--cy)">王</div><div><div class="hm-name">爸爸</div><div class="hm-role" style="color:var(--am)">血压偏高</div></div></div>
+            <div class="hm-metrics">
+              <div class="hm-metric"><span class="hm-metric-key">血压</span><span class="hm-metric-val" style="color:var(--am)">142/91</span></div>
+              <div class="hm-metric"><span class="hm-metric-key">心率</span><span class="hm-metric-val" style="color:var(--cy)">76 bpm</span></div>
+              <div class="hm-metric"><span class="hm-metric-key">步数</span><span class="hm-metric-val" style="color:var(--am)">2,340</span></div>
+              <div class="hm-metric"><span class="hm-metric-key">睡眠</span><span class="hm-metric-val" style="color:var(--gn)">6.8h</span></div>
+            </div>
+          </div>
+          <div class="health-member-card">
+            <div class="hm-top"><div class="hm-av" style="background:rgba(0,229,160,.12);color:var(--gn)">林</div><div><div class="hm-name">妈妈</div><div class="hm-role" style="color:var(--gn)">状态良好</div></div></div>
+            <div class="hm-metrics">
+              <div class="hm-metric"><span class="hm-metric-key">血压</span><span class="hm-metric-val" style="color:var(--gn)">118/76</span></div>
+              <div class="hm-metric"><span class="hm-metric-key">心率</span><span class="hm-metric-val" style="color:var(--gn)">68 bpm</span></div>
+              <div class="hm-metric"><span class="hm-metric-key">步数</span><span class="hm-metric-val" style="color:var(--gn)">8,241</span></div>
+              <div class="hm-metric"><span class="hm-metric-key">睡眠</span><span class="hm-metric-val" style="color:var(--gn)">7.2h</span></div>
+            </div>
+          </div>
+          <div class="health-member-card alert">
+            <div class="hm-top"><div class="hm-av" style="background:rgba(255,179,68,.12);color:var(--am)">奶</div><div><div class="hm-name">奶奶</div><div class="hm-role" style="color:var(--am)">活动量偏低</div></div></div>
+            <div class="hm-metrics">
+              <div class="hm-metric"><span class="hm-metric-key">血压</span><span class="hm-metric-val" style="color:var(--cy)">128/82</span></div>
+              <div class="hm-metric"><span class="hm-metric-key">心率</span><span class="hm-metric-val" style="color:var(--gn)">72 bpm</span></div>
+              <div class="hm-metric"><span class="hm-metric-key">步数</span><span class="hm-metric-val" style="color:var(--am)">580</span></div>
+              <div class="hm-metric"><span class="hm-metric-key">久坐</span><span class="hm-metric-val" style="color:var(--rd)">87min</span></div>
+            </div>
+          </div>
+          <div class="health-member-card">
+            <div class="hm-top"><div class="hm-av" style="background:rgba(168,85,247,.12);color:var(--pu)">宝</div><div><div class="hm-name">宝宝</div><div class="hm-role" style="color:var(--gn)">发育正常</div></div></div>
+            <div class="hm-metrics">
+              <div class="hm-metric"><span class="hm-metric-key">SpO₂</span><span class="hm-metric-val" style="color:var(--gn)">97%</span></div>
+              <div class="hm-metric"><span class="hm-metric-key">心率</span><span class="hm-metric-val" style="color:var(--gn)">96 bpm</span></div>
+              <div class="hm-metric"><span class="hm-metric-key">午睡</span><span class="hm-metric-val" style="color:var(--gn)">108min</span></div>
+              <div class="hm-metric"><span class="hm-metric-key">体温</span><span class="hm-metric-val" style="color:var(--gn)">36.5°C</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PAGE: 安防中心 ===== -->
+  <div class="pdiv">
+    <div class="pdiv-icon" style="background:rgba(255,77,106,.08);border-color:rgba(255,77,106,.25)">
+      <svg width="16" height="16" fill="none" stroke="#ff4d6a" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    </div>
+    <div><div class="pdiv-title">安防中心 · 全屋安全防护</div><div class="pdiv-sub">SECURITY CENTER · 实时监控 + 联动响应</div></div>
+    <div style="margin-left:auto;display:flex;gap:8px"><span class="pb pb-gn">布防中</span><span class="pb pb-rd">1 预警</span></div>
+  </div>
+  <div class="page">
+    <div class="page-content">
+      <div class="g2">
+        <!-- FLOOR PLAN -->
+        <div class="panel">
+          <div class="ph"><div class="pt"><svg width="16" height="16" fill="none" stroke="#00d4ff" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>户型安防地图</div><span class="pb pb-gn">布防已启动</span></div>
+          <div style="padding:14px">
+            <div class="sec-map">
+              <div class="floor-plan">
+                <div class="room-box alert" style="left:2%;top:2%;width:38%;height:46%">
+                  <div class="room-icon">🛋️</div>
+                  <div class="room-name">客厅</div>
+                  <div class="sensor-dot-map warn" style="top:4px;right:4px"></div>
+                </div>
+                <div class="room-box" style="left:42%;top:2%;width:28%;height:46%">
+                  <div class="room-icon">🍳</div>
+                  <div class="room-name">厨房</div>
+                  <div class="sensor-dot-map ok" style="top:4px;right:4px"></div>
+                </div>
+                <div class="room-box" style="left:72%;top:2%;width:26%;height:46%">
+                  <div class="room-icon">🚪</div>
+                  <div class="room-name">入户</div>
+                  <div class="sensor-dot-map ok" style="top:4px;right:4px"></div>
+                </div>
+                <div class="room-box" style="left:2%;top:52%;width:28%;height:44%">
+                  <div class="room-icon">🛏️</div>
+                  <div class="room-name">主卧</div>
+                  <div class="sensor-dot-map ok" style="top:4px;right:4px"></div>
+                </div>
+                <div class="room-box" style="left:32%;top:52%;width:28%;height:44%">
+                  <div class="room-icon">👶</div>
+                  <div class="room-name">儿童房</div>
+                  <div class="sensor-dot-map ok" style="top:4px;right:4px"></div>
+                </div>
+                <div class="room-box" style="left:62%;top:52%;width:36%;height:44%">
+                  <div class="room-icon">🌿</div>
+                  <div class="room-name">阳台</div>
+                  <div class="sensor-dot-map ok" style="top:4px;right:4px"></div>
+                </div>
+              </div>
+              <div style="display:flex;gap:12px;position:absolute;bottom:10px;left:16px;font-size:10px;font-family:'Space Mono',monospace">
+                <span style="display:flex;align-items:center;gap:4px"><span style="width:7px;height:7px;border-radius:50%;background:var(--gn);display:inline-block"></span><span style="color:var(--t3)">正常</span></span>
+                <span style="display:flex;align-items:center;gap:4px"><span style="width:7px;height:7px;border-radius:50%;background:var(--am);display:inline-block"></span><span style="color:var(--t3)">预警</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- EVENTS -->
+        <div class="panel">
+          <div class="ph"><div class="pt"><svg width="16" height="16" fill="none" stroke="#ff4d6a" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>安防事件流</div><span class="pb pb-am">今日 6 事件</span></div>
+          <div class="sec-event-list">
+            <div class="sec-event warn">
+              <div class="sec-event-icon" style="background:var(--am3)">⚠️</div>
+              <div class="sec-event-body">
+                <div class="sec-event-title">客厅异常人员活动 · 姿态告警</div>
+                <div class="sec-event-desc">AI检测到奶奶久坐超标，已触发关怀联动，非安防威胁。</div>
+              </div>
+              <div class="sec-event-time">14:32</div>
+            </div>
+            <div class="sec-event ok">
+              <div class="sec-event-icon" style="background:var(--gn3)">✅</div>
+              <div class="sec-event-body">
+                <div class="sec-event-title">妈妈人脸识别 · 入户确认</div>
+                <div class="sec-event-desc">门口摄像头识别妈妈，置信99%，自动解锁门禁。</div>
+              </div>
+              <div class="sec-event-time">13:35</div>
+            </div>
+            <div class="sec-event ok">
+              <div class="sec-event-icon" style="background:var(--gn3)">🔒</div>
+              <div class="sec-event-body">
+                <div class="sec-event-title">爸爸出门锁门 · 自动布防</div>
+                <div class="sec-event-desc">检测到离家，自动启动外出安防策略，窗帘关闭联动。</div>
+              </div>
+              <div class="sec-event-time">08:52</div>
+            </div>
+            <div class="sec-event ok">
+              <div class="sec-event-icon" style="background:var(--cy3)">📋</div>
+              <div class="sec-event-body">
+                <div class="sec-event-title">每日安防巡检完成</div>
+                <div class="sec-event-desc">全屋传感器、摄像头、门锁自检通过，47项全部正常。</div>
+              </div>
+              <div class="sec-event-time">07:00</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- AUTOMATION RULES -->
+      <div class="panel">
+        <div class="ph"><div class="pt"><svg width="16" height="16" fill="none" stroke="#00d4ff" stroke-width="1.5" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>场景自动化规则</div><div style="display:flex;gap:8px"><span class="pb pb-gn">12 条启用</span><button class="btn btn-primary" style="font-size:11px;padding:4px 10px">+ 新建规则</button></div></div>
+        <div class="rule-item">
+          <div class="rule-num">01</div>
+          <div class="rule-body">
+            <div class="rule-name">妈妈回家 → 回家场景联动</div>
+            <div class="rule-desc">触发：人脸识别确认 → 执行：开灯、空调、播报欢迎语</div>
+            <div class="rule-tags"><span class="rtag cy">人脸识别</span><span class="rtag gn">多设备联动</span><span class="rtag gn">语音播报</span></div>
+          </div>
+          <div class="rule-stat">触发 31次</div>
+          <button class="rule-toggle on"></button>
+        </div>
+        <div class="rule-item">
+          <div class="rule-num">02</div>
+          <div class="rule-body">
+            <div class="rule-name">奶奶久坐超时 → 语音提醒</div>
+            <div class="rule-desc">触发：姿态AI检测静坐超60分钟 → 执行：客厅音箱语音播报</div>
+            <div class="rule-tags"><span class="rtag cy">AI姿态</span><span class="rtag am">关怀联动</span></div>
+          </div>
+          <div class="rule-stat">触发 8次</div>
+          <button class="rule-toggle on"></button>
+        </div>
+        <div class="rule-item">
+          <div class="rule-num">03</div>
+          <div class="rule-body">
+            <div class="rule-name">宝宝午休 → 儿童房降噪模式</div>
+            <div class="rule-desc">触发：AI检测宝宝入睡 → 关闭儿童房灯光、降低全屋噪音阈值</div>
+            <div class="rule-tags"><span class="rtag cy">行为识别</span><span class="rtag gn">环境联动</span></div>
+          </div>
+          <div class="rule-stat">触发 34次</div>
+          <button class="rule-toggle on"></button>
+        </div>
+        <div class="rule-item">
+          <div class="rule-num">04</div>
+          <div class="rule-body">
+            <div class="rule-name">23:30 → 全屋睡眠模式</div>
+            <div class="rule-desc">触发：定时 23:30 → 关闭客厅设备、锁门、降低夜间告警阈值</div>
+            <div class="rule-tags"><span class="rtag gn">定时</span><span class="rtag gn">全屋联动</span></div>
+          </div>
+          <div class="rule-stat">触发 47次</div>
+          <button class="rule-toggle on"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PAGE: 数据分析 ===== -->
+  <div class="pdiv">
+    <div class="pdiv-icon" style="background:rgba(168,85,247,.08);border-color:rgba(168,85,247,.25)">
+      <svg width="16" height="16" fill="none" stroke="#a855f7" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+    </div>
+    <div><div class="pdiv-title">数据分析 · 家庭洞察报告</div><div class="pdiv-sub">DATA ANALYTICS · AI 驱动 · 近30天</div></div>
+    <div style="margin-left:auto"><span class="pb pb-pu">AI 生成报告</span></div>
+  </div>
+  <div class="page">
+    <div class="page-content">
+      <div class="g4">
+        <div class="sc"><div class="sv gn">94<span style="font-size:14px">%</span></div><div class="sl">家庭安全指数</div><div class="sd" style="color:var(--gn)">↑ 较上月+3</div></div>
+        <div class="sc"><div class="sv">87<span style="font-size:14px">%</span></div><div class="sl">AI 预测准确率</div><div class="sd" style="color:var(--gn)">↑ 持续提升</div></div>
+        <div class="sc"><div class="sv am">42<span style="font-size:14px">次</span></div><div class="sl">主动关怀触发</div><div class="sd" style="color:var(--t3)">本月累计</div></div>
+        <div class="sc"><div class="sv pu">2.4M</div><div class="sl">IoT 数据点</div><div class="sd" style="color:var(--t3)">已分析</div></div>
+      </div>
+      <div class="g2">
+        <div class="chart-placeholder">
+          <div class="chart-title-sm">奶奶活动量趋势 · 近14天</div>
+          <svg class="mini-line" height="90" viewBox="0 0 400 90">
+            <defs><linearGradient id="ga" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffb344" stop-opacity=".15"/><stop offset="100%" stop-color="#ffb344" stop-opacity="0"/></linearGradient></defs>
+            <polyline points="0,50 30,45 60,40 90,55 120,50 150,60 180,70 210,65 240,72 270,68 300,75 330,70 360,80 390,75" fill="none" stroke="#3d5a78" stroke-width="1.5" stroke-dasharray="3 3"/>
+            <polyline points="0,55 30,52 60,50 90,58 120,55 150,65 180,78 210,72 240,80 270,75 300,82 330,78 360,86 390,82" fill="none" stroke="#ffb344" stroke-width="2"/>
+            <text x="4" y="30" fill="#3d5a78" font-size="9" font-family="Space Mono">历史均值</text>
+            <text x="4" y="88" fill="#ffb344" font-size="9" font-family="Space Mono">实际数据 · 下降趋势</text>
+          </svg>
+          <div style="font-size:11px;color:var(--am);font-family:'Space Mono',monospace;margin-top:6px">AI 洞察：活动量连续2周低于均值，需重点关注干预效果</div>
+        </div>
+        <div class="chart-placeholder">
+          <div class="chart-title-sm">爸爸血压趋势 · 近7天</div>
+          <svg class="mini-line" height="90" viewBox="0 0 400 90">
+            <polyline points="0,60 60,55 120,50 180,45 240,48 300,42 360,38" fill="none" stroke="#3d5a78" stroke-width="1.5" stroke-dasharray="3 3"/>
+            <polyline points="0,58 60,52 120,48 180,44 240,52 300,45 360,40" fill="none" stroke="#ff4d6a" stroke-width="2"/>
+            <text x="4" y="30" fill="#3d5a78" font-size="9" font-family="Space Mono">安全阈值 140/90</text>
+            <text x="4" y="88" fill="#ff4d6a" font-size="9" font-family="Space Mono">实测收缩压 · 周三五偏高</text>
+          </svg>
+          <div style="font-size:11px;color:var(--am);font-family:'Space Mono',monospace;margin-top:6px">AI 洞察：血压与工作日压力周期高度相关，建议关注</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="ph"><div class="pt"><svg width="16" height="16" fill="none" stroke="#a855f7" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>AI 月度家庭健康报告摘要</div><span class="pb pb-pu">2026年3月</span></div>
+        <div style="padding:16px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px">
+          <div style="background:var(--bg2);border:1px solid var(--b);border-radius:10px;padding:12px">
+            <div style="font-size:11px;color:var(--cy);font-family:'Space Mono',monospace;margin-bottom:6px">家庭安全</div>
+            <div style="font-size:12px;color:var(--t2);line-height:1.6">本月无重大安防事件。门禁正常运作47天，摄像覆盖率100%。燃气/烟雾传感全部在线，0次误报。</div>
+          </div>
+          <div style="background:var(--bg2);border:1px solid rgba(255,179,68,.2);border-radius:10px;padding:12px">
+            <div style="font-size:11px;color:var(--am);font-family:'Space Mono',monospace;margin-bottom:6px">健康关怀</div>
+            <div style="font-size:12px;color:var(--t2);line-height:1.6">关怀提醒42次，有效干预34次。奶奶活动量下降趋势需持续关注，爸爸血压已建立预测模型。</div>
+          </div>
+          <div style="background:var(--bg2);border:1px solid rgba(0,229,160,.15);border-radius:10px;padding:12px">
+            <div style="font-size:11px;color:var(--gn);font-family:'Space Mono',monospace;margin-bottom:6px">习惯档案</div>
+            <div style="font-size:12px;color:var(--t2);line-height:1.6">4位成员档案置信度平均84%，较上月提升9%。宝宝作息档案进入稳定态，妈妈习惯预测准确率92%。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PAGE: 文件存储 ===== -->
+  <div class="pdiv">
+    <div class="pdiv-icon" style="background:rgba(0,229,160,.08);border-color:rgba(0,229,160,.25)">
+      <svg width="16" height="16" fill="none" stroke="#00e5a0" stroke-width="1.5" viewBox="0 0 24 24"><path d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8"/></svg>
+    </div>
+    <div><div class="pdiv-title">家庭存储 · NAS 私有云</div><div class="pdiv-sub">FAMILY STORAGE · 本地加密 · 8TB 可用</div></div>
+    <div style="margin-left:auto;display:flex;gap:8px"><span class="pb pb-cy">2.4TB / 8TB</span><span class="pb pb-gn">AES-256 加密</span></div>
+  </div>
+  <div class="page">
+    <div class="page-content">
+      <!-- USAGE BAR -->
+      <div class="panel">
+        <div class="ph"><div class="pt"><svg width="16" height="16" fill="none" stroke="#00e5a0" stroke-width="1.5" viewBox="0 0 24 24"><path d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8"/></svg>存储用量分布</div><button class="btn btn-ghost" style="font-size:11px;padding:4px 10px">清理建议</button></div>
+        <div style="padding:16px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--t2);margin-bottom:8px"><span>已用 2.4TB</span><span style="color:var(--t3)">共 8TB · 剩余 70%</span></div>
+          <div class="storage-usage-bar">
+            <div class="storage-seg" style="width:20%;background:var(--pu2)"></div>
+            <div class="storage-seg" style="width:16%;background:var(--cy2)"></div>
+            <div class="storage-seg" style="width:12%;background:var(--gn2)"></div>
+            <div class="storage-seg" style="width:8%;background:var(--am2)"></div>
+            <div class="storage-seg" style="width:4%;background:var(--rd2)"></div>
+          </div>
+          <div class="storage-legend">
+            <span style="display:flex;align-items:flex-start;gap:5px"><span class="leg-dot" style="background:var(--pu2)"></span><span style="color:var(--t2)">安防录像 1.6TB</span></span>
+            <span style="display:flex;align-items:flex-start;gap:5px"><span class="leg-dot" style="background:var(--cy2)"></span><span style="color:var(--t2)">家庭相册 1.3TB</span></span>
+            <span style="display:flex;align-items:flex-start;gap:5px"><span class="leg-dot" style="background:var(--gn2)"></span><span style="color:var(--t2)">文件备份 960GB</span></span>
+            <span style="display:flex;align-items:flex-start;gap:5px"><span class="leg-dot" style="background:var(--am2)"></span><span style="color:var(--t2)">AI 模型 640GB</span></span>
+            <span style="display:flex;align-items:flex-start;gap:5px"><span class="leg-dot" style="background:var(--rd2)"></span><span style="color:var(--t2)">其他 320GB</span></span>
+          </div>
+        </div>
+      </div>
+      <div class="g2">
+        <!-- RECENT FILES -->
+        <div class="panel">
+          <div class="ph"><div class="pt"><svg width="16" height="16" fill="none" stroke="#00d4ff" stroke-width="1.5" viewBox="0 0 24 24"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>最近文件</div><span class="pb pb-cy">全部成员共享</span></div>
+          <div style="padding:12px 14px">
+            <div class="file-list-item"><div class="file-icon-box">📷</div><div><div class="file-name">家庭相册 2026年3月</div><div class="file-meta">照片 · 247张 · 自动同步</div></div><div class="file-size">1.2GB</div></div>
+            <div class="file-list-item"><div class="file-icon-box">🎬</div><div><div class="file-name">客厅录像 2026-03-31</div><div class="file-meta">安防视频 · 自动录制</div></div><div class="file-size">4.8GB</div></div>
+            <div class="file-list-item"><div class="file-icon-box">📄</div><div><div class="file-name">奶奶医疗档案.pdf</div><div class="file-meta">文档 · 爸爸上传</div></div><div class="file-size">2.4MB</div></div>
+            <div class="file-list-item"><div class="file-icon-box">🎵</div><div><div class="file-name">宝宝成长记录视频</div><div class="file-meta">视频 · 妈妈录制</div></div><div class="file-size">820MB</div></div>
+          </div>
+        </div>
+        <!-- MEMBER ALBUMS -->
+        <div class="panel">
+          <div class="ph"><div class="pt"><svg width="16" height="16" fill="none" stroke="#00e5a0" stroke-width="1.5" viewBox="0 0 24 24"><path d="M5 12H3l9-9 9 9h-2M5 12v7a1 1 0 001 1h4v-4h4v4h4a1 1 0 001-1v-7"/></svg>成员专属空间</div><span class="pb pb-gn">AES-256 隔离加密</span></div>
+          <div style="padding:12px 14px;display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg2);border:1px solid var(--b);border-radius:10px">
+              <div style="width:32px;height:32px;border-radius:50%;background:rgba(0,212,255,.12);color:var(--cy);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500">王</div>
+              <div style="flex:1"><div style="font-size:12px;color:var(--t);font-weight:500">爸爸的空间</div><div style="font-size:10px;color:var(--t3);font-family:'Space Mono',monospace">工作文件、健康数据</div></div>
+              <div style="font-size:11px;color:var(--cy);font-family:'Space Mono',monospace">420GB</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg2);border:1px solid var(--b);border-radius:10px">
+              <div style="width:32px;height:32px;border-radius:50%;background:rgba(0,229,160,.12);color:var(--gn);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500">林</div>
+              <div style="flex:1"><div style="font-size:12px;color:var(--t);font-weight:500">妈妈的空间</div><div style="font-size:10px;color:var(--t3);font-family:'Space Mono',monospace">照片、家庭记录</div></div>
+              <div style="font-size:11px;color:var(--gn);font-family:'Space Mono',monospace">680GB</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg2);border:1px solid var(--b);border-radius:10px">
+              <div style="width:32px;height:32px;border-radius:50%;background:rgba(168,85,247,.12);color:var(--pu);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500">宝</div>
+              <div style="flex:1"><div style="font-size:12px;color:var(--t);font-weight:500">宝宝成长档案</div><div style="font-size:10px;color:var(--t3);font-family:'Space Mono',monospace">成长视频、体检记录</div></div>
+              <div style="font-size:11px;color:var(--pu);font-family:'Space Mono',monospace">360GB</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg2);border:1px solid var(--b);border-radius:10px">
+              <div style="width:32px;height:32px;border-radius:50%;background:rgba(255,179,68,.12);color:var(--am);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500">奶</div>
+              <div style="flex:1"><div style="font-size:12px;color:var(--t);font-weight:500">奶奶健康档案</div><div style="font-size:10px;color:var(--t3);font-family:'Space Mono',monospace">医嘱记录、用药日志</div></div>
+              <div style="font-size:11px;color:var(--am);font-family:'Space Mono',monospace">120GB</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="text-align:center;padding:20px;background:var(--bg1);border-top:1px solid var(--b)">
+    <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--t3)">Home AIBrain OS v2.1 · 全端原型 · PC + Mobile · 共 10 个功能模块完整覆盖</div>
+  </div>
+</div>
